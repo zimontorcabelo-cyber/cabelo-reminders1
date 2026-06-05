@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CABELO – תזכורות חי</title>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --surface: #141414;
+    --surface2: #1c1c1c;
+    --border: #252525;
+    --gold: #c9a96e;
+    --gold-light: #e8c98a;
+    --gold-dim: rgba(201,169,110,0.12);
+    --green: #1a6b3a;
+    --green-bright: #27ae60;
+    --text: #f0ece4;
+    --text-muted: #777;
+    --text-dim: #444;
+    --radius: 14px;
+    --red: #c0392b;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family: 'Heebo', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    direction: rtl;
+  }
+
+  /* HEADER */
+  .header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 28px;
+    height: 58px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .logo {
+    font-size: 20px;
+    font-weight: 900;
+    letter-spacing: 7px;
+    color: var(--gold);
+  }
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .live-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--text-muted);
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 4px 12px;
+  }
+  .live-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--green-bright);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%,100% { opacity:1; }
+    50% { opacity:.4; }
+  }
+  .btn-refresh {
+    background: var(--gold-dim);
+    border: 1px solid rgba(201,169,110,0.3);
+    color: var(--gold);
+    border-radius: 8px;
+    padding: 7px 16px;
+    font-family: 'Heebo', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .btn-refresh:hover { background: rgba(201,169,110,0.2); }
+  .btn-refresh.spinning svg { animation: spin .7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* DATE NAV */
+  .date-nav {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 28px;
+    display: flex;
+    align-items: center;
+    gap: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .date-nav::-webkit-scrollbar { display: none; }
+  .date-tab {
+    padding: 14px 20px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-muted);
+    border-bottom: 2px solid transparent;
+    transition: all .2s;
+    white-space: nowrap;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+  }
+  .date-tab .day-name { font-size: 11px; color: var(--text-dim); }
+  .date-tab.active { color: var(--gold); border-bottom-color: var(--gold); }
+  .date-tab.active .day-name { color: var(--gold); opacity: .7; }
+  .date-tab .count-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--gold);
+    opacity: 0;
+    margin-top: 2px;
+  }
+  .date-tab.has-events .count-dot { opacity: 1; }
+  .date-picker-wrap {
+    margin-right: auto;
+    padding-right: 12px;
+  }
+  .date-picker-wrap input[type=date] {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 6px 10px;
+    color: var(--text);
+    font-family: 'Heebo', sans-serif;
+    font-size: 12px;
+    outline: none;
+    cursor: pointer;
+  }
+
+  /* STATS */
+  .stats-bar {
+    padding: 12px 28px;
+    display: flex;
+    gap: 24px;
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+  }
+  .stat {
+    font-size: 12px;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .stat strong { color: var(--text); font-weight: 700; }
+
+  /* SEARCH */
+  .search-bar {
+    padding: 16px 28px 8px;
+  }
+  .search-wrap {
+    position: relative;
+    max-width: 340px;
+  }
+  .search-wrap input {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 9px 14px 9px 38px;
+    color: var(--text);
+    font-family: 'Heebo', sans-serif;
+    font-size: 13px;
+    outline: none;
+    transition: border .2s;
+  }
+  .search-wrap input:focus { border-color: var(--gold); }
+  .search-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 14px;
+    pointer-events: none;
+  }
+
+  /* GRID */
+  .grid-wrap { padding: 12px 28px 40px; }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+    gap: 14px;
+  }
+
+  /* CARD */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+    transition: border-color .2s, transform .15s;
+    animation: fadeUp .25s ease both;
+    position: relative;
+    overflow: hidden;
+  }
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; right: 0;
+    width: 3px;
+    height: 100%;
+    background: var(--gold);
+    opacity: 0;
+    transition: opacity .2s;
+  }
+  .card:hover { border-color: #333; transform: translateY(-2px); }
+  .card:hover::before { opacity: 1; }
+  .card.done { opacity: .38; pointer-events: none; }
+  @keyframes fadeUp {
+    from { opacity:0; transform: translateY(12px); }
+    to   { opacity:1; transform: translateY(0); }
+  }
+
+  .card-time {
+    font-size: 22px;
+    font-weight: 900;
+    color: var(--gold);
+    letter-spacing: -0.5px;
+    margin-bottom: 6px;
+    line-height: 1;
+  }
+  .card-name {
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 2px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .badge {
+    font-size: 10px;
+    font-weight: 600;
+    background: var(--surface2);
+    border-radius: 20px;
+    padding: 2px 8px;
+    color: var(--text-muted);
+  }
+  .badge.first { background: rgba(201,169,110,0.15); color: var(--gold); }
+  .card-phone {
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-bottom: 12px;
+    direction: ltr;
+    text-align: right;
+  }
+  .card-actions {
+    display: flex;
+    gap: 8px;
+  }
+  .btn-wa {
+    flex: 1;
+    background: var(--green);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 9px 12px;
+    font-family: 'Heebo', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: background .2s;
+    text-decoration: none;
+  }
+  .btn-wa:hover { background: var(--green-bright); }
+  .btn-check {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    border-radius: 8px;
+    padding: 9px 13px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all .2s;
+    font-family: 'Heebo', sans-serif;
+  }
+  .btn-check:hover { border-color: var(--green-bright); color: var(--green-bright); }
+
+  /* EMPTY / LOADING */
+  .empty {
+    text-align: center;
+    color: var(--text-muted);
+    padding: 60px 0;
+    font-size: 14px;
+    grid-column: 1/-1;
+  }
+  .empty .icon { font-size: 36px; margin-bottom: 10px; }
+  .loading-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.6);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .loading-overlay.show { display: flex; }
+  .spinner {
+    width: 36px; height: 36px;
+    border: 3px solid var(--border);
+    border-top-color: var(--gold);
+    border-radius: 50%;
+    animation: spin .7s linear infinite;
+  }
+  .loading-text { font-size: 14px; color: var(--text-muted); }
+
+  /* MODAL */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.75);
+    z-index: 300;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 26px;
+    width: min(480px, 92vw);
+    position: relative;
+  }
+  .modal-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--gold);
+    margin-bottom: 6px;
+  }
+  .modal-sub {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 14px;
+  }
+  .modal textarea {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    color: var(--text);
+    font-family: 'Heebo', sans-serif;
+    font-size: 13px;
+    resize: vertical;
+    min-height: 110px;
+    outline: none;
+    direction: rtl;
+    line-height: 1.6;
+  }
+  .modal textarea:focus { border-color: var(--gold); }
+  .modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 14px;
+  }
+  .btn-send {
+    background: var(--green);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 22px;
+    font-family: 'Heebo', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    transition: background .2s;
+  }
+  .btn-send:hover { background: var(--green-bright); }
+  .btn-cancel {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    border-radius: 8px;
+    padding: 10px 18px;
+    font-family: 'Heebo', sans-serif;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  .modal-close {
+    position: absolute;
+    top: 16px; left: 16px;
+    background: none; border: none;
+    color: var(--text-muted);
+    font-size: 22px;
+    cursor: pointer;
+    line-height: 1;
+    padding: 0 4px;
+  }
+  .last-updated {
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">CABELO</div>
+  <div class="header-right">
+    <span class="last-updated" id="lastUpdated">—</span>
+    <div class="live-badge">
+      <div class="live-dot"></div>
+      <span>Google Calendar</span>
+    </div>
+    <button class="btn-refresh" id="btnRefresh" onclick="loadEvents()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <path d="M23 4v6h-6M1 20v-6h6"/>
+        <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
+      </svg>
+      רענן
+    </button>
+  </div>
+</div>
+
+<!-- Date tabs -->
+<div class="date-nav" id="dateNav">
+  <div class="date-picker-wrap">
+    <input type="date" id="customDate" onchange="onCustomDate(this.value)">
+  </div>
+</div>
+
+<!-- Stats -->
+<div class="stats-bar" id="statsBar" style="display:none"></div>
+
+<!-- Search -->
+<div class="search-bar">
+  <div class="search-wrap">
+    <span class="search-icon">🔍</span>
+    <input type="text" id="searchInput" placeholder="חיפוש לקוח / טלפון..." oninput="renderCards()">
+  </div>
+</div>
+
+<!-- Grid -->
+<div class="grid-wrap">
+  <div class="grid" id="cardsGrid">
+    <div class="empty"><div class="icon">📅</div>טוען נתונים מהיומן...</div>
+  </div>
+</div>
+
+<!-- Loading -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="spinner"></div>
+  <div class="loading-text">מושך תורים מ-Google Calendar...</div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">×</button>
+    <div class="modal-title" id="modalTitle"></div>
+    <div class="modal-sub" id="modalSub"></div>
+    <textarea id="modalMsg"></textarea>
+    <div class="modal-actions">
+      <a id="btnSendWA" href="#" target="_blank" class="btn-send" onclick="closeModal()">
+        📱 שלח WhatsApp
+      </a>
+      <button class="btn-cancel" onclick="closeModal()">ביטול</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── State ────────────────────────────────────────────
+let allEvents = [];       // all fetched events (parsed)
+let dateMap = {};         // date string → events[]
+let activeDates = [];     // sorted unique dates (DD/MM/YYYY)
+let selectedDate = '';
+const done = new Set();
+
+const DAYS_HE = ['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
+const MONTHS_HE = ['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
+
+// ─── Parse Google Calendar event → our format ─────────
+function parseEvent(ev) {
+  const sum = ev.summary || '';
+  // EasyBiz format: "שם | טיפול N | 0501234567"
+  const parts = sum.split('|').map(s => s.trim());
+  let name = parts[0] || sum;
+  let treatmentNum = 0;
+  let phone = '';
+
+  if (parts.length >= 3) {
+    name = parts[0];
+    const m = parts[1].match(/(\d+)/);
+    if (m) treatmentNum = parseInt(m[1]);
+    phone = parts[2];
+  } else if (parts.length === 2) {
+    name = parts[0];
+    phone = parts[1];
+  }
+
+  // Extract WhatsApp URL from description if present
+  let waUrl = '';
+  const desc = ev.description || '';
+  const waMatch = desc.match(/https:\/\/wa\.me\/\S+/);
+  if (waMatch) waUrl = waMatch[0];
+
+  // Phone fallback from WA url
+  if (!phone && waUrl) {
+    const nm = waUrl.match(/wa\.me\/972(\d+)/);
+    if (nm) phone = '0' + nm[1];
+  }
+
+  const startDT = ev.start?.dateTime || ev.start?.date || '';
+  const endDT   = ev.end?.dateTime   || ev.end?.date   || '';
+
+  const startD = new Date(startDT);
+  const day = String(startD.getDate()).padStart(2,'0');
+  const mon = String(startD.getMonth()+1).padStart(2,'0');
+  const yr  = startD.getFullYear();
+  const dateKey = `${day}/${mon}/${yr}`;
+  const timeStr = startDT.includes('T')
+    ? startD.toLocaleTimeString('he-IL', {hour:'2-digit', minute:'2-digit'})
+    : '';
+  const dayIdx = startD.getDay();
+
+  return {
+    id: ev.id,
+    name: name.trim(),
+    phone: phone.trim(),
+    treatmentNum,
+    waUrl,
+    dateKey,
+    timeStr,
+    dayName: DAYS_HE[dayIdx],
+    startD,
+    sortKey: startD.getTime(),
+    raw: ev,
+  };
+}
+
+// ─── Main Fetch ────────────────────────────────────────
+async function loadEvents() {
+  const btn = document.getElementById('btnRefresh');
+  const overlay = document.getElementById('loadingOverlay');
+  btn.classList.add('spinning');
+  overlay.classList.add('show');
+
+  // Fetch 14 days from today
+  const now = new Date();
+  const start = now.toISOString().split('T')[0] + 'T00:00:00';
+  const endD = new Date(now.getTime() + 14 * 86400000);
+  const end = endD.toISOString().split('T')[0] + 'T23:59:59';
+
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: 'You are a Google Calendar assistant for CABELO clinic. When asked to list appointments, call the Google Calendar list_events tool for calendar amit4510@gmail.com and return ONLY a JSON array of the raw events (no explanation). The JSON must be valid and parseable.',
+        messages: [{
+          role: 'user',
+          content: `List all calendar events from amit4510@gmail.com between ${start} and ${end} (timezone Asia/Jerusalem). Order by startTime. Return only a JSON array of event objects with fields: id, summary, description, start, end, status. Skip events where summary is just "." or empty. Max 200 events.`
+        }],
+        mcp_servers: [{
+          type: 'url',
+          url: 'https://calendarmcp.googleapis.com/mcp/v1',
+          name: 'google-calendar'
+        }]
+      })
+    });
+
+    const data = await resp.json();
+
+    // Extract text from content blocks
+    let rawText = '';
+    for (const block of (data.content || [])) {
+      if (block.type === 'text') rawText += block.text;
+      if (block.type === 'mcp_tool_result') {
+        for (const inner of (block.content || [])) {
+          if (inner.type === 'text') rawText += inner.text;
+        }
+      }
+    }
+
+    // Parse JSON array from response
+    let events = [];
+    const jsonMatch = rawText.match(/\[[\s\S]*\]/);
+    if (jsonMatch) {
+      try { events = JSON.parse(jsonMatch[0]); } catch(e) {}
+    }
+
+    // Filter real EasyBiz appointments (summary contains | or has wa.me in description)
+    events = events.filter(ev => {
+      const sum = (ev.summary || '').trim();
+      const desc = ev.description || '';
+      return sum !== '.' && sum !== '' && (sum.includes('|') || desc.includes('wa.me'));
+    });
+
+    processEvents(events);
+
+  } catch(err) {
+    console.error(err);
+    document.getElementById('cardsGrid').innerHTML =
+      `<div class="empty"><div class="icon">⚠️</div>שגיאה בטעינת הנתונים<br><small style="color:#555">${err.message}</small></div>`;
+  } finally {
+    btn.classList.remove('spinning');
+    overlay.classList.remove('show');
+    document.getElementById('lastUpdated').textContent =
+      'עודכן: ' + new Date().toLocaleTimeString('he-IL', {hour:'2-digit',minute:'2-digit'});
+  }
+}
+
+function processEvents(rawEvents) {
+  allEvents = rawEvents.map(parseEvent).sort((a,b) => a.sortKey - b.sortKey);
+
+  // Build date map
+  dateMap = {};
+  for (const ev of allEvents) {
+    if (!dateMap[ev.dateKey]) dateMap[ev.dateKey] = [];
+    dateMap[ev.dateKey].push(ev);
+  }
+
+  activeDates = Object.keys(dateMap).sort((a,b) => {
+    const [da,ma,ya] = a.split('/');
+    const [db,mb,yb] = b.split('/');
+    return new Date(ya,ma-1,da) - new Date(yb,mb-1,db);
+  });
+
+  buildDateTabs();
+
+  // Default: select today if exists, else first date
+  const today = todayKey();
+  selectedDate = activeDates.includes(today) ? today : (activeDates[0] || '');
+  updateActiveTab();
+  renderStats();
+  renderCards();
+}
+
+function todayKey() {
+  const d = new Date();
+  return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
+}
+
+// ─── Date Tabs ─────────────────────────────────────────
+function buildDateTabs() {
+  const nav = document.getElementById('dateNav');
+  // Keep the date picker
+  const picker = nav.querySelector('.date-picker-wrap');
+  nav.innerHTML = '';
+  nav.appendChild(picker);
+
+  for (const dk of activeDates) {
+    const [d,m,y] = dk.split('/');
+    const dt = new Date(y, m-1, d);
+    const dayName = DAYS_HE[dt.getDay()];
+    const count = (dateMap[dk] || []).length;
+
+    const tab = document.createElement('div');
+    tab.className = 'date-tab has-events';
+    tab.dataset.date = dk;
+    tab.innerHTML = `
+      <span class="day-name">${dayName}</span>
+      <span>${d}/${m}</span>
+      <div class="count-dot"></div>
+    `;
+    tab.onclick = () => selectDate(dk);
+    nav.insertBefore(tab, picker);
+  }
+}
+
+function selectDate(dk) {
+  selectedDate = dk;
+  updateActiveTab();
+  renderCards();
+  renderStats();
+}
+
+function updateActiveTab() {
+  document.querySelectorAll('.date-tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.date === selectedDate);
+  });
+  // Set custom date input
+  if (selectedDate) {
+    const [d,m,y] = selectedDate.split('/');
+    document.getElementById('customDate').value = `${y}-${m}-${d}`;
+  }
+}
+
+function onCustomDate(val) {
+  if (!val) return;
+  const [y,m,d] = val.split('-');
+  const dk = `${d}/${m}/${y}`;
+  if (activeDates.includes(dk)) {
+    selectDate(dk);
+  } else {
+    selectedDate = dk;
+    renderCards();
+    renderStats();
+  }
+}
+
+// ─── Stats ─────────────────────────────────────────────
+function renderStats() {
+  const bar = document.getElementById('statsBar');
+  const dayEvents = dateMap[selectedDate] || [];
+  const total = allEvents.length;
+  const todayCount = (dateMap[todayKey()] || []).length;
+  const [d,m,y] = (selectedDate || todayKey()).split('/');
+  const dt = new Date(y,m-1,d);
+  const dayName = DAYS_HE[dt.getDay()];
+
+  bar.style.display = 'flex';
+  bar.innerHTML = `
+    <div class="stat">📅 <strong>${dayName} ${d}/${m}</strong></div>
+    <div class="stat">👥 <strong>${dayEvents.length}</strong> תורים ביום זה</div>
+    <div class="stat">📆 <strong>${todayCount}</strong> תורים היום</div>
+    <div class="stat">🗓️ <strong>${total}</strong> תורים ב-14 הימים הקרובים</div>
+  `;
+}
+
+// ─── Cards ─────────────────────────────────────────────
+function renderCards() {
+  const search = document.getElementById('searchInput').value.trim().toLowerCase();
+  let events = dateMap[selectedDate] || [];
+
+  if (search) {
+    events = events.filter(e =>
+      e.name.toLowerCase().includes(search) || e.phone.includes(search)
+    );
+  }
+
+  const grid = document.getElementById('cardsGrid');
+
+  if (events.length === 0) {
+    grid.innerHTML = `<div class="empty"><div class="icon">📭</div>${search ? 'לא נמצאו תוצאות' : 'אין תורים ביום זה'}</div>`;
+    return;
+  }
+
+  grid.innerHTML = events.map((ev, i) => {
+    const isDone = done.has(ev.id);
+    const isFirst = ev.treatmentNum === 0 || ev.treatmentNum === 1;
+    const msg = buildWAMessage(ev);
+    const waHref = ev.waUrl
+      ? `${ev.waUrl}?text=${encodeURIComponent(msg)}`
+      : (ev.phone ? `https://wa.me/972${ev.phone.replace(/^0/,'')}?text=${encodeURIComponent(msg)}` : '');
+
+    return `<div class="card${isDone?' done':''}" style="animation-delay:${i*0.04}s" id="card-${ev.id}">
+      <div class="card-time">${ev.timeStr}</div>
+      <div class="card-name">
+        ${ev.name}
+        ${isFirst ? '<span class="badge first">לקוח חדש</span>' : `<span class="badge">טיפול ${ev.treatmentNum}</span>`}
+      </div>
+      <div class="card-phone">${ev.phone || '—'}</div>
+      <div class="card-actions">
+        ${waHref
+          ? `<button class="btn-wa" onclick="openModal('${esc(ev.id)}','${esc(ev.name)}','${esc(ev.phone)}','${esc(ev.waUrl)}','${esc(ev.timeStr)}','${esc(ev.dateKey)}',${ev.treatmentNum})">📱 שלח תזכורת</button>`
+          : `<button class="btn-wa" style="opacity:.4;cursor:default">אין טלפון</button>`
+        }
+        <button class="btn-check" onclick="markDone('${ev.id}',this)" title="סמן כנשלח">✓</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function esc(s) {
+  return (s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+}
+
+function buildWAMessage(ev) {
+  return `שלום ${ev.name} 😊\n\nרצינו להזכיר לך שיש לך תור ב-CABELO\nתאריך: ${ev.dateKey}\nשעה: ${ev.timeStr}\n\nנשמח לראות אותך! 🌟\n– צוות CABELO`;
+}
+
+function markDone(id, btn) {
+  done.add(id);
+  const card = btn.closest('.card');
+  card.classList.add('done');
+}
+
+// ─── Modal ─────────────────────────────────────────────
+let _modalWaBase = '';
+function openModal(id, name, phone, waUrl, time, dateKey, treatNum) {
+  const msg = `שלום ${name} 😊\n\nרצינו להזכיר לך שיש לך תור ב-CABELO\nתאריך: ${dateKey}\nשעה: ${time}\n\nנשמח לראות אותך! 🌟\n– צוות CABELO`;
+  document.getElementById('modalTitle').textContent = `תזכורת ל-${name}`;
+  document.getElementById('modalSub').textContent = `${dateKey}  ·  ${time}  ·  ${phone}`;
+  document.getElementById('modalMsg').value = msg;
+  _modalWaBase = waUrl || (phone ? `https://wa.me/972${phone.replace(/^0/,'')}` : '');
+  updateModalLink();
+  document.getElementById('modal').classList.add('open');
+}
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('modalMsg').addEventListener('input', updateModalLink);
+});
+function updateModalLink() {
+  const msg = document.getElementById('modalMsg').value;
+  document.getElementById('btnSendWA').href = _modalWaBase + '?text=' + encodeURIComponent(msg);
+}
+function closeModal() {
+  document.getElementById('modal').classList.remove('open');
+}
+document.getElementById('modal').addEventListener('click', e => {
+  if (e.target === document.getElementById('modal')) closeModal();
+});
+
+// ─── Init ──────────────────────────────────────────────
+loadEvents();
+
+// Auto-refresh every 5 minutes
+setInterval(loadEvents, 5 * 60 * 1000);
+</script>
+</body>
+</html>

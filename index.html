@@ -424,6 +424,88 @@
     font-size: 11px;
     color: var(--text-dim);
   }
+  /* MODE TABS */
+  .mode-nav {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 28px;
+    display: flex;
+    gap: 4px;
+  }
+  .mode-tab {
+    padding: 12px 18px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-muted);
+    border-bottom: 2px solid transparent;
+    transition: all .2s;
+  }
+  .mode-tab.active { color: var(--gold); border-bottom-color: var(--gold); }
+  .snapshot-badge {
+    font-size: 11px;
+    color: var(--text-dim);
+    padding: 8px 28px 0;
+  }
+
+  /* INACTIVE TABLE */
+  .inactive-wrap { padding: 16px 28px 40px; }
+  .inactive-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .inactive-table th {
+    text-align: right;
+    color: var(--text-muted);
+    font-weight: 600;
+    font-size: 12px;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .inactive-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+  .inactive-table tr.done { opacity: .35; }
+  .days-badge {
+    font-size: 11px;
+    font-weight: 700;
+    border-radius: 20px;
+    padding: 3px 10px;
+    display: inline-block;
+  }
+  .days-badge.urgent { background: rgba(192,57,43,0.18); color: #e07a6e; }
+  .days-badge.warm { background: rgba(201,169,110,0.15); color: var(--gold); }
+  .inactive-table .phone-col { direction: ltr; text-align: right; color: var(--text-dim); }
+  .btn-wa-small {
+    background: var(--green);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-family: 'Heebo', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .btn-wa-small:hover { background: var(--green-bright); }
+  .btn-check-small {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    border-radius: 6px;
+    padding: 6px 9px;
+    cursor: pointer;
+    font-size: 13px;
+    margin-right: 6px;
+  }
+
 </style>
 </head>
 <body>
@@ -431,50 +513,57 @@
 <div class="header">
   <div class="logo">CABELO</div>
   <div class="header-right">
-    <span class="last-updated" id="lastUpdated">—</span>
-    <div class="live-badge">
-      <div class="live-dot"></div>
-      <span>Google Calendar</span>
+    <span class="last-updated">תמונת מצב מ-<span id="lastUpdated">—</span></span>
+  </div>
+</div>
+
+<div class="mode-nav">
+  <div class="mode-tab active" id="tabUpcoming" onclick="switchMode('upcoming')">📅 תורים קרובים</div>
+  <div class="mode-tab" id="tabInactive" onclick="switchMode('inactive')">💤 לקוחות לא פעילים</div>
+</div>
+<div class="snapshot-badge">⚠️ נתונים סטטיים — תמונת מצב מהרגע שהקובץ נוצר. לעדכון, שלח קובץ לקוחות/פגישות חדש מ-EasyBizy.</div>
+
+<!-- UPCOMING SECTION -->
+<div id="sectionUpcoming">
+  <div class="date-nav" id="dateNav">
+    <div class="date-picker-wrap">
+      <input type="date" id="customDate" onchange="onCustomDate(this.value)">
     </div>
-    <button class="btn-refresh" id="btnRefresh" onclick="loadEvents()">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-        <path d="M23 4v6h-6M1 20v-6h6"/>
-        <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
-      </svg>
-      רענן
-    </button>
+  </div>
+  <div class="stats-bar" id="statsBar" style="display:none"></div>
+  <div class="search-bar">
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="searchInput" placeholder="חיפוש לקוח / טלפון..." oninput="renderCards()">
+    </div>
+  </div>
+  <div class="grid-wrap">
+    <div class="grid" id="cardsGrid"></div>
   </div>
 </div>
 
-<!-- Date tabs -->
-<div class="date-nav" id="dateNav">
-  <div class="date-picker-wrap">
-    <input type="date" id="customDate" onchange="onCustomDate(this.value)">
+<!-- INACTIVE SECTION -->
+<div id="sectionInactive" style="display:none">
+  <div class="search-bar">
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="inactiveSearch" placeholder="חיפוש לקוח / טלפון..." oninput="renderInactive()">
+    </div>
   </div>
-</div>
-
-<!-- Stats -->
-<div class="stats-bar" id="statsBar" style="display:none"></div>
-
-<!-- Search -->
-<div class="search-bar">
-  <div class="search-wrap">
-    <span class="search-icon">🔍</span>
-    <input type="text" id="searchInput" placeholder="חיפוש לקוח / טלפון..." oninput="renderCards()">
+  <div class="inactive-wrap">
+    <table class="inactive-table">
+      <thead>
+        <tr>
+          <th>שם</th>
+          <th>טלפון</th>
+          <th>ביקור אחרון</th>
+          <th>סה״כ טיפולים</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="inactiveBody"></tbody>
+    </table>
   </div>
-</div>
-
-<!-- Grid -->
-<div class="grid-wrap">
-  <div class="grid" id="cardsGrid">
-    <div class="empty"><div class="icon">📅</div>טוען נתונים מהיומן...</div>
-  </div>
-</div>
-
-<!-- Loading -->
-<div class="loading-overlay" id="loadingOverlay">
-  <div class="spinner"></div>
-  <div class="loading-text">מושך תורים מ-Google Calendar...</div>
 </div>
 
 <!-- Modal -->
@@ -494,159 +583,67 @@
 </div>
 
 <script>
+const GENERATED_AT = "18.06.2026 11:17";
+const UPCOMING_DATA = [{"id": "a5583cf3-55d8-4ca1-9f0b-19202e593eee", "name": "david", "phone": "0533012193", "startsAt": "2026-06-18T13:00:00+00:00", "service": "טיפול מלא לכל הגוף"}, {"id": "555ff450-d276-45b2-ac7c-afd2e2414bed", "name": "נויה", "phone": "0538286111", "startsAt": "2026-06-18T18:20:00+00:00", "service": "טיפול מלא לכל הגוף"}, {"id": "e725c1d3-1ac8-40cd-bcd4-47dbd61e2c52", "name": "קאי סוסמן", "phone": "0523350140", "startsAt": "2026-06-18T19:10:00+00:00", "service": "טיפול מלא לכל הגוף"}, {"id": "2261f6be-6260-4acd-8855-18342e6e86f1", "name": "מיקה דבק", "phone": "0556652567", "startsAt": "2026-06-18T19:45:00+00:00", "service": "טיפול מלא לכל הגוף"}, {"id": "91051892-7e88-4329-ad92-89dd675d8583", "name": "אופק לוי", "phone": "0532707640", "startsAt": "2026-06-18T20:40:00+00:00", "service": "טיפול מלא לכל הגוף"}, {"id": "65ae5e9c-2a93-4a6f-b93b-048ddad52841", "name": "לקוח ללא שם", "phone": "", "startsAt": "2026-06-19T08:00:00+00:00", "service": "טיפול מלא לכל הגוף"}, {"id": "fdb88423-8036-4ef5-970e-eab192332f85", "name": "אלעד ליבנת", "phone": "0549020344", "startsAt": "2026-06-19T08:15:00+00:00", "service": "טיפול מלא לכל הגוף"}, {"id": "6fd79855-6796-44ee-856b-f27562bd85b3", "name": "עדי חן", "phone": "0523789760", "startsAt": "2026-06-19T08:45:00+00:00", "service": "טיפול מלא לכל הגוף"}, {"id": "c539157a-bef1-4f01-8482-d308f1e8eeff", "name": "אדם הראל", "phone": "0546832103", "startsAt": "2026-06-19T09:10:00+00:00", "service": "טיפול מלא לכל הגוף"}, {"id": "af539e6f-381a-42e8-9e49-3cace3140da0", "name": "שירה שפי", "phone": "0544224603", "startsAt": "2026-06-19T09:40:00+00:00", "service": "טיפול מלא לכל הגוף"}, {"id": "8593b8f3-1166-480b-9592-9b725ef2997f", "name": "קרולינה גלר", "phone": "0502226039", "startsAt": "2026-06-19T10:00:00+00:00", "service": "טיפול מלא לכל הגוף"}, {"id": "a8a01101-aa62-4865-ae83-ec4ba2787b64", "name": "יעל דניאלי", "phone": "0534802211", "startsAt": "2026-06-19T10:25:00+00:00", "service": "טיפול מלא לכל הגוף"}, {"id": "e7fdb365-4180-4e9a-bbb9-110604013f2b", "name": "נויה", "phone": "0538286111", "startsAt": "2026-06-19T11:10:00+00:00", "service": "טיפול מלא לכל הגוף"}, {"id": "b685ead9-0c44-4537-9c31-eef9c02428f5", "name": "מאי מוסיאוף", "phone": "0543451403", "startsAt": "2026-06-19T11:40:00+00:00", "service": "טיפול מלא לכל הגוף"}, {"id": "2b166e7c-2290-43a4-9734-56edf584b29a", "name": "שיר משען", "phone": "0524024252", "startsAt": "2026-06-19T12:00:00+00:00", "service": "טיפול מלא לכל הגוף"}, {"id": "ae69f4a0-9a68-433d-9ec0-32c9fc80690f", "name": "לקוח ללא שם", "phone": "", "startsAt": "2026-06-21T09:00:00+00:00", "service": "טיפול מלא לכל הגוף"}, {"id": "8852482d-b259-40e3-b2fd-91e5ec0922a9", "name": "לקוח ללא שם", "phone": "", "startsAt": "2026-06-21T10:00:00+00:00", "service": "טיפול מלא לכל הגוף"}, {"id": "7d472d13-2151-416e-ad94-cfefb5d4adf7", "name": "תהל אלבז", "phone": "0509016511", "startsAt": "2026-06-21T11:00:00+00:00", "service": "טיפול מלא לכל הגוף"}, {"id": "5e461b99-db89-4d2d-b4cd-bbaa6f3d342f", "name": "לקוח ללא שם", "phone": "", "startsAt": "2026-06-21T13:00:00+00:00", "service": "טיפול מלא לכל הגוף"}, {"id": "8ed0fecf-a1d5-486f-be7e-fd8edce7e1ee", "name": "יפית שיקלי", "phone": "0506080263", "startsAt": "2026-06-21T13:40:00+00:00", "service": "טיפול מלא לכל הגוף"}, {"id": "2f5e4308-d254-409d-a3a2-af854b49d91e", "name": "טל אילן", "phone": "0503481130", "startsAt": "2026-06-21T13:55:00+00:00", "service": "טיפול מלא לכל הגוף"}, {"id": "566bc765-7035-46be-ac9c-f6d3e11eb538", "name": "אריאל פרקש", "phone": "0537262641", "startsAt": "2026-06-21T14:40:00+00:00", "service": "טיפול מלא לכל הגוף"}, {"id": "87ce2596-48da-4e4e-9550-abf93e9ddde3", "name": "לקוח ללא שם", "phone": "", "startsAt": "2026-06-21T15:35:00+00:00", "service": "טיפול מלא לכל הגוף"}, {"id": "b298cebc-a393-46dc-9e95-c63bd0eac4c7", "name": "לקוח ללא שם", "phone": "", "startsAt": "2026-06-21T16:40:00+00:00", "service": "טיפול מלא לכל הגוף"}, {"id": "3541fd7d-db73-4cb4-ba1c-d44c3f960385", "name": "לקוח ללא שם", "phone": "", "startsAt": "2026-06-21T17:05:00+00:00", "service": "טיפול מלא לכל הגוף"}, {"id": "00fbd345-8cec-4e2c-a772-39758fa10f0d", "name": "לקוח ללא שם", "phone": "", "startsAt": "2026-06-21T17:55:00+00:00", "service": "טיפול מלא לכל הגוף"}, {"id": "d20e915d-8eba-442d-a781-a9b70d223f6c", "name": "שירה חיימי", "phone": "0503636514", "startsAt": "2026-06-21T18:00:00+00:00", "service": "טיפול מלא לכל הגוף"}, {"id": "18dc9d6d-7ade-4a52-a5e2-e98e3f691267", "name": "שקד תדמור", "phone": "0543373441", "startsAt": "2026-06-21T18:45:00+00:00", "service": "טיפול מלא לכל הגוף"}, {"id": "21dd11d7-0184-44ce-ad5d-fe54e615649b", "name": "חגית שלומי ביבס", "phone": "0509781681", "startsAt": "2026-06-21T19:15:00+00:00", "service": "טיפול מלא לכל הגוף"}, {"id": "4c5aa459-21b8-4117-99c3-a38585a5947f", "name": "מיקה מימון", "phone": "0549771018", "startsAt": "2026-06-21T20:15:00+00:00", "service": "טיפול מלא לכל הגוף"}, {"id": "1be3803f-04d1-4e59-b953-ee69774c9610", "name": "אלון פרחי", "phone": "0544226952", "startsAt": "2026-06-21T21:00:00+00:00", "service": "טיפול מלא לכל הגוף"}, {"id": "deb2a804-5c48-47cb-b0cb-c0b8f0d52b0b", "name": "לקוח ללא שם", "phone": "", "startsAt": "2026-06-23T08:00:00+00:00", "service": "טיפול מלא לכל הגוף"}, {"id": "c18b7493-0ed6-46b2-a817-2ec1e99042be", "name": "התור שהזמנת למרפאה בכללית", "phone": "", "startsAt": "2026-06-23T10:20:00+00:00", "service": "טיפול מלא לכל הגוף"}, {"id": "419f9081-b797-4100-b555-6421ca797502", "name": "רויטל פרדזב", "phone": "0527220360", "startsAt": "2026-06-23T12:30:00+00:00", "service": "טיפול מלא לכל הגוף"}, {"id": "f6bf4443-2261-46c4-be35-6b96d97932c5", "name": "לקוח ללא שם", "phone": "", "startsAt": "2026-06-23T14:30:00+00:00", "service": "טיפול מלא לכל הגוף"}, {"id": "2d26bb29-667f-4dfa-add7-5d8a457811f1", "name": "מאשה סטילבאנס", "phone": "0587944057", "startsAt": "2026-06-23T14:35:00+00:00", "service": "טיפול מלא לכל הגוף"}, {"id": "8ace88e2-6a86-4527-b497-1000e52a0e3d", "name": "דנה שטורם", "phone": "0528463399", "startsAt": "2026-06-23T14:50:00+00:00", "service": "טיפול מלא לכל הגוף"}, {"id": "e8c86cca-00f8-4365-913c-62fe7fed7b40", "name": "לקוח ללא שם", "phone": "", "startsAt": "2026-06-23T16:05:00+00:00", "service": "טיפול מלא לכל הגוף"}, {"id": "4e47592b-a6f2-4fef-ae92-7ce4b2885031", "name": "רינת כליף", "phone": "0587464355", "startsAt": "2026-06-23T16:10:00+00:00", "service": "טיפול מלא לכל הגוף"}, {"id": "136359ea-3bf7-403b-9496-da8bec58a8c2", "name": "לקוח ללא שם", "phone": "", "startsAt": "2026-06-23T17:00:00+00:00", "service": "טיפול מלא לכל הגוף"}, {"id": "71ff6bae-a5b6-4e40-95df-f46d85f36441", "name": "לקוח ללא שם", "phone": "", "startsAt": "2026-06-23T17:40:00+00:00", "service": "טיפול מלא לכל הגוף"}, {"id": "e9f903bf-e478-4fe7-bca8-32d5b3f1b047", "name": "יותם שוורץ", "phone": "0526465090", "startsAt": "2026-06-23T17:45:00+00:00", "service": "טיפול מלא לכל הגוף"}, {"id": "e8943d13-1c32-469d-9ed8-c64bcdd83ce8", "name": "לקוח ללא שם", "phone": "", "startsAt": "2026-06-23T18:30:00+00:00", "service": "טיפול מלא לכל הגוף"}, {"id": "2bb37a07-1671-402e-8eff-03ac7470ffce", "name": "תור: רומי קסלר", "phone": "", "startsAt": "2026-06-23T18:35:00+00:00", "service": "טיפול מלא לכל הגוף"}, {"id": "4c03b53d-79c4-4c4e-a744-e6a7e30b0ba4", "name": "מיכל וקנין", "phone": "0585130301", "startsAt": "2026-06-23T19:20:00+00:00", "service": "טיפול מלא לכל הגוף"}, {"id": "14705a39-1a9e-4c91-9f76-7cbb4dfc6839", "name": "‫מיתר פרידמן‬‎", "phone": "0547532434", "startsAt": "2026-06-23T20:05:00+00:00", "service": "טיפול מלא לכל הגוף"}, {"id": "63766ee4-d783-4355-926d-8abefff01989", "name": "לקוח ללא שם", "phone": "", "startsAt": "2026-06-24T14:00:00+00:00", "service": "טיפול מלא לכל הגוף"}, {"id": "37bf1bc4-4ace-4460-97b4-3ad4ffaff700", "name": "לקוח ללא שם", "phone": "", "startsAt": "2026-06-25T18:00:00+00:00", "service": "טיפול מלא לכל הגוף"}, {"id": "246cf467-24a8-4c7b-aedc-d3dc5dcad2c5", "name": "מאי אקשטיין", "phone": "0547724858", "startsAt": "2026-06-25T19:00:00+00:00", "service": "טיפול מלא לכל הגוף"}, {"id": "a89d7a30-1804-41de-a340-1e3772861c3d", "name": "לקוח ללא שם", "phone": "", "startsAt": "2026-06-26T08:00:00+00:00", "service": "טיפול מלא לכל הגוף"}, {"id": "50bf9f09-0081-4198-8e41-3934789feaa1", "name": "ניקי אליהו", "phone": "0545835676", "startsAt": "2026-06-26T08:15:00+00:00", "service": "טיפול מלא לכל הגוף"}, {"id": "5ab9a702-f48c-466b-8064-2e5343337cd3", "name": "שקד תדמור", "phone": "0543373441", "startsAt": "2026-06-26T08:30:00+00:00", "service": "טיפול מלא לכל הגוף"}, {"id": "3933a15a-8423-4cd2-b86f-40b596eab54b", "name": "נרקיס אהרונוף", "phone": "0526068310", "startsAt": "2026-06-26T09:15:00+00:00", "service": "טיפול מלא לכל הגוף"}, {"id": "d5dd9d78-bf2a-4986-8d91-bcd1a7417afe", "name": "לקוח ללא שם", "phone": "", "startsAt": "2026-06-26T10:00:00+00:00", "service": "טיפול מלא לכל הגוף"}, {"id": "a9a6b38f-b4f9-42bd-b8ff-972416675b5e", "name": "Eliya", "phone": "0532351812", "startsAt": "2026-06-26T10:05:00+00:00", "service": "טיפול מלא לכל הגוף"}, {"id": "38705102-f955-483d-9dc5-a4be96e35903", "name": "נטע ליבנת", "phone": "0549020213", "startsAt": "2026-06-26T11:05:00+00:00", "service": "טיפול מלא לכל הגוף"}, {"id": "e4bcfeab-8d42-40cc-b861-362eb1c77932", "name": "לקוח ללא שם", "phone": "", "startsAt": "2026-06-26T11:30:00+00:00", "service": "טיפול מלא לכל הגוף"}, {"id": "1f5ff874-fbc1-4312-8611-04b307c60893", "name": "לקוח ללא שם", "phone": "", "startsAt": "2026-06-26T12:35:00+00:00", "service": "טיפול מלא לכל הגוף"}, {"id": "ec3edf40-b853-41d4-8bcb-d853dd7753c2", "name": "Jenna CongdonLoeffler", "phone": "0587952269", "startsAt": "2026-06-26T13:30:00+00:00", "service": "טיפול מלא לכל הגוף"}, {"id": "608bbc63-352a-46fa-870a-83f222cd39d3", "name": "לקוח ללא שם", "phone": "", "startsAt": "2026-06-26T14:05:00+00:00", "service": "טיפול מלא לכל הגוף"}, {"id": "15e4a82d-7811-4782-a050-c8f4e568c6ad", "name": "התור שהזמנת למרפאה בכללית", "phone": "", "startsAt": "2026-06-28T08:48:00+00:00", "service": "טיפול מלא לכל הגוף"}, {"id": "b53c90f6-2564-47e2-a4c2-379f23612f48", "name": "לקוח ללא שם", "phone": "", "startsAt": "2026-06-28T13:00:00+00:00", "service": "טיפול מלא לכל הגוף"}, {"id": "b437fcd3-5ed2-4524-ac8b-6a432b0d8abe", "name": "לקוח ללא שם", "phone": "", "startsAt": "2026-06-28T14:40:00+00:00", "service": "טיפול מלא לכל הגוף"}, {"id": "e60f8328-2dab-4d41-8de0-da3c20f3d7f2", "name": "תומר בן זקן", "phone": "0542270278", "startsAt": "2026-06-28T14:45:00+00:00", "service": "בית שחי"}, {"id": "98adc1e8-7f9e-4138-b7d8-d6baeeadea20", "name": "לקוח ללא שם", "phone": "", "startsAt": "2026-06-28T16:00:00+00:00", "service": "טיפול מלא לכל הגוף"}, {"id": "ae9cdf21-9732-4ebd-8c89-5076101ff687", "name": "שני אדם", "phone": "0545711636", "startsAt": "2026-06-28T16:05:00+00:00", "service": "טיפול מלא לכל הגוף"}, {"id": "3e8a9a6e-ede2-458b-8fde-78e1c4229dff", "name": "און קלינגר", "phone": "0547901900", "startsAt": "2026-06-28T17:00:00+00:00", "service": "טיפול מלא לכל הגוף"}, {"id": "b83a1bb1-b304-4d32-93c3-e01514cfc216", "name": "לקוח ללא שם", "phone": "", "startsAt": "2026-06-28T17:05:00+00:00", "service": "טיפול מלא לכל הגוף"}, {"id": "4a6f482f-f67a-4bab-b4dd-e3801e661876", "name": "‫מאור יחזקאל‬‎", "phone": "0527273811", "startsAt": "2026-06-28T17:45:00+00:00", "service": "טיפול מלא לכל הגוף"}, {"id": "1e37280d-d70e-4f64-b085-18432c40efa1", "name": "לקוח ללא שם", "phone": "", "startsAt": "2026-06-28T18:30:00+00:00", "service": "טיפול מלא לכל הגוף"}, {"id": "74ca1e23-dc2c-4263-be05-5f03e1e7e84c", "name": "לקוח ללא שם", "phone": "", "startsAt": "2026-06-30T14:30:00+00:00", "service": "טיפול מלא לכל הגוף"}, {"id": "0d7761c4-5e6a-4e1b-9c9d-294b25eecde9", "name": "לקוח ללא שם", "phone": "", "startsAt": "2026-06-30T17:00:00+00:00", "service": "טיפול מלא לכל הגוף"}, {"id": "17bb0fa3-c04f-46d8-8150-92be4f7055e4", "name": "לקוח ללא שם", "phone": "", "startsAt": "2026-06-30T18:30:00+00:00", "service": "טיפול מלא לכל הגוף"}];
+const INACTIVE_DATA = [{"id": "0e5e2464-2c4d-4159-b1ff-04b8b84803ae", "name": "מאי דהן", "phone": "0525306089", "lastVisit": "2025-07-10T19:21:53.647+00:00", "daysInactive": 342, "totalTreatments": 17}, {"id": "30a29efd-2457-4840-a061-e3ef8f9ea935", "name": "אראל נוי", "phone": "0528908686", "lastVisit": "2025-07-11T08:41:12.65+00:00", "daysInactive": 341, "totalTreatments": 10}, {"id": "87e310b7-a77f-48c8-9d36-79cb0fac20c1", "name": "שושנה וורן", "phone": "0587428665", "lastVisit": "2025-07-11T08:41:23.57+00:00", "daysInactive": 341, "totalTreatments": 8}, {"id": "45e26c92-293b-4c44-bf6b-fd37932bdb01", "name": "עוז נפתלי", "phone": "0507909049", "lastVisit": "2025-07-13T16:26:47.2+00:00", "daysInactive": 339, "totalTreatments": 8}, {"id": "3196cb6f-4550-4df1-af58-60c0e2eda407", "name": "קארין גל וזמן", "phone": "0504042151", "lastVisit": "2025-07-18T09:48:17.683+00:00", "daysInactive": 334, "totalTreatments": 2}, {"id": "6cf7484a-c482-41a6-bf74-09444fcd56bd", "name": "רומי סברו", "phone": "0506674773", "lastVisit": "2025-07-20T15:01:26.49+00:00", "daysInactive": 332, "totalTreatments": 5}, {"id": "8b1841e2-8445-44f3-b69e-c6264ec1eef8", "name": "ליאור דליהו", "phone": "0545915333", "lastVisit": "2025-07-22T20:29:44.32+00:00", "daysInactive": 330, "totalTreatments": 1}, {"id": "760cfa5e-5998-405e-823f-2cdd4f7da029", "name": "סופי מצקין", "phone": "0545950803", "lastVisit": "2025-07-22T17:03:02.28+00:00", "daysInactive": 330, "totalTreatments": 17}, {"id": "b71e267a-3bc3-468b-9c02-2dadd9ae6b4c", "name": "מאי שלמה", "phone": "0503403439", "lastVisit": "2025-07-27T20:26:24.353+00:00", "daysInactive": 325, "totalTreatments": 17}, {"id": "758c9861-5e13-4fa7-89ba-5bdcd78ab1f3", "name": "דניאל כהן", "phone": "0545229346", "lastVisit": "2025-07-29T14:30:41.99+00:00", "daysInactive": 323, "totalTreatments": 3}, {"id": "ffe73ae8-0ae9-4796-84de-8b4da64f51f2", "name": "שירלי מזרחי", "phone": "0506450018", "lastVisit": "2025-08-01T12:10:29.263+00:00", "daysInactive": 320, "totalTreatments": 9}, {"id": "a8258aa2-fc5a-4faf-a6ca-0ef46a5d4852", "name": "ענתי נקאש", "phone": "0506010666", "lastVisit": "2025-08-01T12:10:41.083+00:00", "daysInactive": 320, "totalTreatments": 11}, {"id": "580c8487-38f0-41e2-bc34-d8573ed6afc4", "name": "ליאת אלקן", "phone": "0528667731", "lastVisit": "2025-08-03T18:10:51.047+00:00", "daysInactive": 318, "totalTreatments": 3}, {"id": "7dc35bc9-970a-4b1e-af75-810950c35077", "name": "מוריה שורץ", "phone": "0542997229", "lastVisit": "2025-08-05T18:32:51.783+00:00", "daysInactive": 316, "totalTreatments": 1}, {"id": "5accfe16-1655-465b-ba6e-2384b66a1bcd", "name": "מעיין בר", "phone": "0545661018", "lastVisit": "2025-08-10T21:09:38.457+00:00", "daysInactive": 311, "totalTreatments": 5}, {"id": "6f9cfcb8-30a6-4058-8c85-a1b1da155e50", "name": "גלעד", "phone": "0502333996", "lastVisit": "2025-08-12T18:48:27.977+00:00", "daysInactive": 309, "totalTreatments": 9}, {"id": "90bbd0a2-7b4a-4031-8e45-de5275afe4a5", "name": "טליה אברג׳ל", "phone": "0535308640", "lastVisit": "2025-08-15T10:32:38.347+00:00", "daysInactive": 306, "totalTreatments": 8}, {"id": "30d48828-29f9-4927-a6f5-26123276887d", "name": "מוריה", "phone": "0502673030", "lastVisit": "2025-08-17T14:58:56.887+00:00", "daysInactive": 304, "totalTreatments": 1}, {"id": "3db397fe-a0d4-445f-921b-d2b3d1ed4cff", "name": "אלי ליזרוביץ", "phone": "0549444117", "lastVisit": "2025-08-19T14:09:35.62+00:00", "daysInactive": 302, "totalTreatments": 8}, {"id": "37209a76-25cf-415f-97ef-8f6d91b0fa0d", "name": "מיכאלה איילין", "phone": "0504216927", "lastVisit": "2025-08-19T14:09:23.917+00:00", "daysInactive": 302, "totalTreatments": 6}, {"id": "66ea4c98-c781-4b88-9bca-ea01c9e6aec8", "name": "גיא רפאל", "phone": "0508724532", "lastVisit": "2025-08-22T10:52:56.69+00:00", "daysInactive": 299, "totalTreatments": 20}, {"id": "510d0d9d-1070-4ba3-be93-5fdf50159bcf", "name": "קורל חדד", "phone": "0547752995", "lastVisit": "2025-08-24T15:05:57.5+00:00", "daysInactive": 297, "totalTreatments": 8}, {"id": "671c3d2a-92c3-45ad-9a38-cb9458c9ac46", "name": "תומר חיילובסקי", "phone": "0546560735", "lastVisit": "2025-08-26T19:12:00.53+00:00", "daysInactive": 295, "totalTreatments": 7}, {"id": "16473d44-c12a-454f-a534-59610476de2a", "name": "ארנון חביב", "phone": "0548181999", "lastVisit": "2025-08-26T19:11:49.373+00:00", "daysInactive": 295, "totalTreatments": 2}, {"id": "a7426a08-3eff-406d-b927-64cd41a8ab84", "name": "בר חיון", "phone": "0549331162", "lastVisit": "2025-08-29T11:56:50.267+00:00", "daysInactive": 292, "totalTreatments": 4}, {"id": "b5d03fa6-39ed-4228-b907-0a2471d740ed", "name": "ליאור כספי", "phone": "0525312731", "lastVisit": "2025-08-31T16:39:35.52+00:00", "daysInactive": 290, "totalTreatments": 10}, {"id": "6bbb30ca-264f-44ab-b9d5-0f298ba5ff9a", "name": "דניאל אבדלינוב", "phone": "0509555085", "lastVisit": "2025-08-31T16:40:17.89+00:00", "daysInactive": 290, "totalTreatments": 20}, {"id": "c633b0b9-5c9a-41f6-b8ef-4d66617292b3", "name": "רותם טובול", "phone": "0505645022", "lastVisit": "2025-09-02T19:53:29.577+00:00", "daysInactive": 288, "totalTreatments": 3}, {"id": "34c20bea-625a-4ca0-8db1-d233cb1d18d0", "name": "שי ליאור", "phone": "0522294078", "lastVisit": "2025-09-02T15:33:28.86+00:00", "daysInactive": 288, "totalTreatments": 2}, {"id": "0a566553-502a-40fa-8e80-a4e4c817332e", "name": "מעיין ברזילי", "phone": "0584332066", "lastVisit": "2025-09-07T18:08:12.883+00:00", "daysInactive": 283, "totalTreatments": 9}, {"id": "15736af2-792a-4eb0-9f87-c241eba1bc04", "name": "לוסיה קאלבו", "phone": "0532708063", "lastVisit": "2025-09-11T09:04:55.903+00:00", "daysInactive": 279, "totalTreatments": 2}, {"id": "11b65bb4-4364-4e90-968c-5bda03fe18d5", "name": "אנה ארגונוב", "phone": "0502489494", "lastVisit": "2025-09-12T09:55:17.167+00:00", "daysInactive": 278, "totalTreatments": 7}, {"id": "bba2adae-0d23-43dd-8ced-ad57e66e9b85", "name": "תמוז טובי", "phone": "0543964398", "lastVisit": "2025-09-14T15:22:47.91+00:00", "daysInactive": 276, "totalTreatments": 26}, {"id": "e017649b-353e-42e1-95f9-f0e0419d76b4", "name": "ליאור עמר", "phone": "0542644066", "lastVisit": "2025-09-15T16:05:02.983+00:00", "daysInactive": 275, "totalTreatments": 2}, {"id": "1efd3571-314a-4e36-a849-6480c0ca8904", "name": "רעות פרנקו", "phone": "0542199686", "lastVisit": "2025-09-16T15:38:13.303+00:00", "daysInactive": 274, "totalTreatments": 14}, {"id": "69ccf37d-f186-4b4b-be98-ccd39f9a57ea", "name": "אביטל שוורץ", "phone": "0548326066", "lastVisit": "2025-09-16T14:28:15.07+00:00", "daysInactive": 274, "totalTreatments": 9}, {"id": "57b4b33d-b328-4fb5-a751-9c93f4ba7e34", "name": "עומר בסיק", "phone": "0504722390", "lastVisit": "2025-09-16T20:39:37.73+00:00", "daysInactive": 274, "totalTreatments": 10}, {"id": "3e6ba2a6-7477-412a-b192-1ddac517cccd", "name": "מיקה פיין", "phone": "0547949980", "lastVisit": "2025-09-19T08:45:56.64+00:00", "daysInactive": 271, "totalTreatments": 9}, {"id": "872b4660-bad9-4870-8220-407c30870083", "name": "יוסף", "phone": "0546722096", "lastVisit": "2025-09-21T13:07:54.473+00:00", "daysInactive": 269, "totalTreatments": 1}, {"id": "0ec3c212-d293-4c1d-96fe-3070865f0ed8", "name": "שחר כספי", "phone": "0523276269", "lastVisit": "2025-09-21T15:25:17.683+00:00", "daysInactive": 269, "totalTreatments": 10}, {"id": "e1431058-5361-42ad-9a87-77efc127e71e", "name": "אליאנה דרורי", "phone": "0535222399", "lastVisit": "2025-09-25T17:49:00.827+00:00", "daysInactive": 265, "totalTreatments": 14}, {"id": "7e9ea47b-2eef-4d86-86e1-20df7c0047f2", "name": "Ana Luisa Mansour", "phone": "0533574752", "lastVisit": "2025-09-26T09:18:40.07+00:00", "daysInactive": 264, "totalTreatments": 2}, {"id": "d9fe4169-3130-4ec8-b7ce-4166845412c9", "name": "גל עפרוני", "phone": "0508934033", "lastVisit": "2025-09-26T13:40:31.753+00:00", "daysInactive": 264, "totalTreatments": 3}, {"id": "d363b07b-f79b-4017-930d-5a52d6c422d8", "name": "Jonathan Gutmann", "phone": "0585886268", "lastVisit": "2025-09-26T13:39:49.947+00:00", "daysInactive": 264, "totalTreatments": 4}, {"id": "c9b8d67e-de9a-4d69-89b7-1946b10b8c2d", "name": "ג׳ס מיילין דה ורה", "phone": "0548148197", "lastVisit": "2025-09-28T16:56:54.487+00:00", "daysInactive": 262, "totalTreatments": 8}, {"id": "0a9dcd48-200b-4dce-860e-0225e77bed8e", "name": "מיקה גולן", "phone": "0558859156", "lastVisit": "2025-09-28T14:13:26.163+00:00", "daysInactive": 262, "totalTreatments": 6}, {"id": "6e7cae07-9815-45f1-9ccb-5f2a11825e1e", "name": "ורד גורא", "phone": "0543104575", "lastVisit": "2025-09-29T20:42:32.273+00:00", "daysInactive": 261, "totalTreatments": 3}, {"id": "3f99601f-e317-4d11-8cde-f51b066156b1", "name": "Yael Algranti", "phone": "0557724300", "lastVisit": "2025-09-30T16:11:49.463+00:00", "daysInactive": 260, "totalTreatments": 6}, {"id": "84243a8c-687c-4582-a9cc-99c4abb06903", "name": "שי גפן", "phone": "0525488200", "lastVisit": "2025-09-30T17:27:01.543+00:00", "daysInactive": 260, "totalTreatments": 4}, {"id": "499e292e-cb0b-4881-8cf7-b0b613bcf367", "name": "זיו עמיר", "phone": "0543971548", "lastVisit": "2025-09-30T14:37:39.297+00:00", "daysInactive": 260, "totalTreatments": 20}, {"id": "8b32d503-12dc-4ea9-bfb9-f8008aa51a26", "name": "דותן זייפרט", "phone": "0547377470", "lastVisit": "2025-09-30T17:27:34.44+00:00", "daysInactive": 260, "totalTreatments": 1}, {"id": "a1bfc4b8-932b-4d91-b3fe-e64e5819f8de", "name": "יעל גורביץ", "phone": "0542198079", "lastVisit": "2025-09-30T17:27:12.31+00:00", "daysInactive": 260, "totalTreatments": 13}, {"id": "9e6abdc0-3034-46e4-88c7-a38927ba48b6", "name": "מאי שורץ", "phone": "0542449315", "lastVisit": "2025-10-03T09:47:31.923+00:00", "daysInactive": 257, "totalTreatments": 3}, {"id": "fc1e4aeb-704c-45e5-8d50-d665bbabe765", "name": "לירז ברש", "phone": "0546363378", "lastVisit": "2025-10-03T09:47:09.507+00:00", "daysInactive": 257, "totalTreatments": 13}, {"id": "bd3529d6-354f-48a4-9eab-278fc63997b4", "name": "ליהיא לוטנברג", "phone": "0506347779", "lastVisit": "2025-10-05T17:13:04.313+00:00", "daysInactive": 255, "totalTreatments": 3}, {"id": "f041a92a-a7bc-48db-b909-f2964cbfc778", "name": "ליאור צרני", "phone": "0542940288", "lastVisit": "2025-10-05T14:33:56.09+00:00", "daysInactive": 255, "totalTreatments": 17}, {"id": "ffe9602c-b517-41a1-a190-71779869af81", "name": "בתיה לולוי", "phone": "0548770939", "lastVisit": "2025-10-05T17:12:02.953+00:00", "daysInactive": 255, "totalTreatments": 6}, {"id": "56cd0231-92c3-4094-ac75-46cea4a6e40d", "name": "קרן ערמוני דומני", "phone": "0527360716", "lastVisit": "2025-10-10T15:27:58.77+00:00", "daysInactive": 250, "totalTreatments": 4}, {"id": "866e286b-ac7b-4053-a9ad-2ad5f39ea600", "name": "אמילי חייק", "phone": "0548916164", "lastVisit": "2025-10-12T15:27:42.673+00:00", "daysInactive": 248, "totalTreatments": 1}, {"id": "1538702b-68ee-46f9-85d1-2e38c731cc36", "name": "אייל בנטולילה", "phone": "0542293535", "lastVisit": "2025-10-12T15:27:52.827+00:00", "daysInactive": 248, "totalTreatments": 4}, {"id": "f2c277f9-010d-4276-86c6-9cf8bd290cad", "name": "טל גל", "phone": "0544866227", "lastVisit": "2025-10-17T12:07:17.843+00:00", "daysInactive": 243, "totalTreatments": 4}, {"id": "9c79b7a2-cb29-44c9-88e0-94a4fd598d2b", "name": "שירה מור", "phone": "0507805553", "lastVisit": "2025-10-19T18:11:08.617+00:00", "daysInactive": 241, "totalTreatments": 3}, {"id": "79975fa3-bd46-45c0-8ceb-048a68dad09d", "name": "דורין סלק", "phone": "0524641748", "lastVisit": "2025-10-21T17:00:08.82+00:00", "daysInactive": 239, "totalTreatments": 1}, {"id": "193978ca-a085-4482-aee4-125bb5358d4e", "name": "נטליה גורנשטיין", "phone": "0548999489", "lastVisit": "2025-10-24T11:00:24.897+00:00", "daysInactive": 236, "totalTreatments": 13}, {"id": "781402b1-b908-4cd1-b90a-deeb665f6dba", "name": "שירה בר אשר", "phone": "0528856516", "lastVisit": "2025-10-24T11:00:35.163+00:00", "daysInactive": 236, "totalTreatments": 14}, {"id": "2695ebf2-a0d5-45c8-8b82-5fdec0f43444", "name": "דויד", "phone": "0525556871", "lastVisit": "2025-10-28T22:02:22.447+00:00", "daysInactive": 232, "totalTreatments": 2}, {"id": "50271bd7-5218-4d41-9d2a-29b645fc0dd3", "name": "שרון ליבובסקי", "phone": "0545803306", "lastVisit": "2025-10-31T12:15:15.44+00:00", "daysInactive": 229, "totalTreatments": 1}, {"id": "bf337b6a-8d1d-444b-9794-5445d6fe765f", "name": "נועם לוי", "phone": "0544871589", "lastVisit": "2025-11-02T16:51:14.413+00:00", "daysInactive": 227, "totalTreatments": 4}, {"id": "8bcc3920-d53f-4b0d-af22-c6e30ea2341d", "name": "דני", "phone": "0533108954", "lastVisit": "2025-11-02T16:51:25.227+00:00", "daysInactive": 227, "totalTreatments": 1}, {"id": "a6e8611e-8554-4b96-a23e-464b42a8458f", "name": "נדב קובסניאנו", "phone": "0509640505", "lastVisit": "2025-11-04T17:41:57.66+00:00", "daysInactive": 225, "totalTreatments": 4}, {"id": "ba399885-1996-415d-be3c-6a2bafffa8f7", "name": "שייה", "phone": "0524068882", "lastVisit": "2025-11-06T08:46:37.603+00:00", "daysInactive": 223, "totalTreatments": 1}, {"id": "0277e8f0-75ae-401e-b383-a360cde67b05", "name": "נועה יחיאב", "phone": "0547935851", "lastVisit": "2025-11-07T18:00:14.577+00:00", "daysInactive": 222, "totalTreatments": 9}, {"id": "6562b753-1c4b-40b5-baa2-6d5ca2907d14", "name": "נועה עוז", "phone": "0545502327", "lastVisit": "2025-11-09T15:49:35.933+00:00", "daysInactive": 220, "totalTreatments": 2}, {"id": "66de0ede-fe55-4c16-b118-208cb83a68ff", "name": "אשרף נורי", "phone": "0547601996", "lastVisit": "2025-11-09T15:54:19.463+00:00", "daysInactive": 220, "totalTreatments": 2}, {"id": "e9a2d2b4-916a-47f9-97bf-72768e3bdc97", "name": "שרון פרנקו", "phone": "0539239003", "lastVisit": "2025-11-11T16:58:33.147+00:00", "daysInactive": 218, "totalTreatments": 1}, {"id": "798b7be1-1586-4edb-a535-b6472c80051e", "name": "דניאל מיכליק", "phone": "0547910925", "lastVisit": "2025-11-11T16:58:00.527+00:00", "daysInactive": 218, "totalTreatments": 1}, {"id": "ce160354-24ae-4eb8-87d8-0029d955cc96", "name": "מיכל שרגר", "phone": "0544331134", "lastVisit": "2025-11-11T16:58:21.997+00:00", "daysInactive": 218, "totalTreatments": 11}, {"id": "a7327444-75df-48ab-b5c6-1ec8ccc98da1", "name": "סשה רובין", "phone": "0522151594", "lastVisit": "2025-11-13T18:25:41.763+00:00", "daysInactive": 216, "totalTreatments": 12}, {"id": "9e987e3b-b42a-4c20-a326-5fe94497d571", "name": "בן הראלי", "phone": "0584748589", "lastVisit": "2025-11-13T18:25:52.217+00:00", "daysInactive": 216, "totalTreatments": 11}, {"id": "a8f3ab34-4c8a-4dba-a4eb-43d09fac66d2", "name": "דודו קובסניאנו", "phone": "0506206203", "lastVisit": "2025-11-13T18:55:16.573+00:00", "daysInactive": 216, "totalTreatments": 6}, {"id": "4f5f0227-8f8d-4986-a5c2-bf7c790596aa", "name": "יהורם מלמד", "phone": "0527730685", "lastVisit": "2025-11-16T21:42:25.37+00:00", "daysInactive": 213, "totalTreatments": 2}, {"id": "938a34b6-aa09-4c0b-aea2-92f40f456480", "name": "איתי חניה", "phone": "0528916917", "lastVisit": "2025-11-18T18:51:53.707+00:00", "daysInactive": 211, "totalTreatments": 6}, {"id": "6c47fc92-d9f6-474a-a75b-849fd47717e9", "name": "Lotan Eny", "phone": "0544773671", "lastVisit": "2025-11-19T12:58:35.39+00:00", "daysInactive": 210, "totalTreatments": 1}, {"id": "65ea6de8-ee4a-4e53-95d6-77c85557c002", "name": "שירה שטורם", "phone": "0523913399", "lastVisit": "2025-11-21T13:06:19.42+00:00", "daysInactive": 208, "totalTreatments": 13}, {"id": "cb9b76f9-800b-4c92-bec4-27b4f429b3d6", "name": "די סרהי טאו", "phone": "0506818842", "lastVisit": "2025-11-23T16:27:49.967+00:00", "daysInactive": 206, "totalTreatments": 3}, {"id": "3cd894bb-e85e-4ace-9478-196b0a68d02f", "name": "איב לבקובסקי", "phone": "0503131400", "lastVisit": "2025-11-25T19:53:57.793+00:00", "daysInactive": 204, "totalTreatments": 18}, {"id": "cc138006-2e3f-4048-a85c-45c2bfa90b3a", "name": "לירון שמשון", "phone": "0503778707", "lastVisit": "2025-11-25T19:52:28.09+00:00", "daysInactive": 204, "totalTreatments": 14}, {"id": "95d72bec-b8e8-4f0f-a83c-76827bb9be6d", "name": "אתי ברקוביץ", "phone": "0502203537", "lastVisit": "2025-11-28T10:16:10.47+00:00", "daysInactive": 201, "totalTreatments": 13}, {"id": "24782890-6ea0-45e7-84c4-805978bbd461", "name": "גיא סלר", "phone": "0526154101", "lastVisit": "2025-11-28T10:15:44.127+00:00", "daysInactive": 201, "totalTreatments": 1}, {"id": "aa444467-1c29-43e6-ae2f-10b67bcd0e58", "name": "נטע לניאדו", "phone": "0542279786", "lastVisit": "2025-11-28T10:15:58.423+00:00", "daysInactive": 201, "totalTreatments": 3}, {"id": "176281a6-14f8-47e7-8871-e05187fbfc72", "name": "זיו סבן", "phone": "0547190105", "lastVisit": "2025-11-28T11:06:26.38+00:00", "daysInactive": 201, "totalTreatments": 10}, {"id": "b3d2a6ea-22cb-4310-8544-5973b5474603", "name": "שחר קארו", "phone": "0539948365", "lastVisit": "2025-12-02T16:26:35.1+00:00", "daysInactive": 197, "totalTreatments": 6}, {"id": "4137dfa7-98ce-48df-8f14-579535f9ab40", "name": "טליה", "phone": "0542420522", "lastVisit": "2025-12-04T17:49:22.117+00:00", "daysInactive": 195, "totalTreatments": 1}, {"id": "161068c8-65ad-4e39-9a02-c7c51b435482", "name": "גילי", "phone": "0523033333", "lastVisit": "2025-12-05T09:27:44.173+00:00", "daysInactive": 194, "totalTreatments": 1}, {"id": "2b1aa2f5-edd4-4bd7-8552-402dce353a7a", "name": "מור שילוח", "phone": "0509054008", "lastVisit": "2025-12-05T09:32:23.347+00:00", "daysInactive": 194, "totalTreatments": 2}, {"id": "31cdd333-43cc-4c61-ae1a-32f21577af55", "name": "קייט יורקובה", "phone": "0545955116", "lastVisit": "2025-12-07T14:31:03.897+00:00", "daysInactive": 192, "totalTreatments": 15}, {"id": "2a2e6743-7363-4e92-83b4-bc5fbf2a3ace", "name": "רווח שלומית", "phone": "0546270787", "lastVisit": "2025-12-07T17:32:42.973+00:00", "daysInactive": 192, "totalTreatments": 2}, {"id": "b8905ba5-b9c0-4ae5-92ca-63db8f873c31", "name": "שיר לביא", "phone": "0543131521", "lastVisit": "2025-12-09T07:47:26.833+00:00", "daysInactive": 191, "totalTreatments": 1}, {"id": "25427a7b-8eeb-4f3c-b748-9b5659c756e1", "name": "דריה שרץ", "phone": "0503020431", "lastVisit": "2025-12-12T11:45:59.283+00:00", "daysInactive": 187, "totalTreatments": 3}, {"id": "21c3cefb-35e7-4bce-a92e-85e3a3b617a9", "name": "כפיר סברו", "phone": "0543189834", "lastVisit": "2025-12-12T11:46:31.283+00:00", "daysInactive": 187, "totalTreatments": 9}, {"id": "7912e4e8-80ce-49ab-8951-32d270cf2577", "name": "אלמה", "phone": "0547179131", "lastVisit": "2025-12-14T02:40:40.743+00:00", "daysInactive": 186, "totalTreatments": 6}, {"id": "4c041fdb-2737-47c8-904a-e8aa8ac7c9bb", "name": "לילך ג", "phone": "0523665729", "lastVisit": "2025-12-23T17:03:19.513+00:00", "daysInactive": 176, "totalTreatments": 1}, {"id": "1814e2f3-30d2-43b0-951a-7779a59aca12", "name": "רון כהן", "phone": "0522800007", "lastVisit": "2025-12-23T19:11:39.66+00:00", "daysInactive": 176, "totalTreatments": 17}, {"id": "54e70423-a14a-4757-bc6e-f4c6f1949bb7", "name": "עומר בן שלמה", "phone": "0546808238", "lastVisit": "2025-12-25T09:43:53.697+00:00", "daysInactive": 174, "totalTreatments": 1}, {"id": "3feaff3e-56d5-46c7-8206-01e01f0253d5", "name": "Camila", "phone": "0506995492", "lastVisit": "2025-12-25T11:56:57.213+00:00", "daysInactive": 174, "totalTreatments": 1}, {"id": "47532176-da0e-4ac5-9556-f40ba5cad7fc", "name": "עומר רייכמן", "phone": "0537361190", "lastVisit": "2025-12-25T09:42:18.727+00:00", "daysInactive": 174, "totalTreatments": 1}, {"id": "9886896e-60fd-444a-b208-6a8fc0d215b7", "name": "עמית אדרי", "phone": "0548347112", "lastVisit": "2025-12-25T09:42:08.023+00:00", "daysInactive": 174, "totalTreatments": 9}, {"id": "ebf66662-758a-4249-bcaa-cdc11eb3aa3c", "name": "קרן נאור", "phone": "0502021990", "lastVisit": "2025-12-26T10:50:48.587+00:00", "daysInactive": 173, "totalTreatments": 4}, {"id": "66c7e5fe-c109-43fa-b5d4-e37b5f1bb4c4", "name": "מיה גדות", "phone": "0523376309", "lastVisit": "2025-12-26T08:59:47.93+00:00", "daysInactive": 173, "totalTreatments": 1}, {"id": "948123ec-554c-433f-9e59-ee174040f8d2", "name": "תהילה אהרון", "phone": "0533362689", "lastVisit": "2025-12-28T17:54:49.5+00:00", "daysInactive": 171, "totalTreatments": 2}, {"id": "fed86ff8-dd3d-41fb-8f2b-b1212c74b826", "name": "ירון כהן קוריאט", "phone": "0544858901", "lastVisit": "2025-12-30T19:48:50.757+00:00", "daysInactive": 169, "totalTreatments": 4}, {"id": "23528fba-3524-4163-b293-0cd93efb04f3", "name": "עמית דדון", "phone": "0542029927", "lastVisit": "2025-12-30T19:50:13.833+00:00", "daysInactive": 169, "totalTreatments": 15}, {"id": "e720c4bb-0691-491b-976b-03f07c3e39b1", "name": "מומי", "phone": "0546094684", "lastVisit": "2026-01-02T10:28:33.78+00:00", "daysInactive": 166, "totalTreatments": 1}, {"id": "b8aa974f-14c2-438a-be77-a941614606a2", "name": "סהר מינה", "phone": "0525105109", "lastVisit": "2026-01-08T11:52:37.447+00:00", "daysInactive": 160, "totalTreatments": 10}, {"id": "0a8baa40-fed2-432e-8e3d-7523e9826d71", "name": "נועה דחבש", "phone": "0546970202", "lastVisit": "2026-01-15T15:46:38.003+00:00", "daysInactive": 153, "totalTreatments": 2}, {"id": "432b56df-323d-4c6d-b5a7-81a5282fa58e", "name": "נוריה כהן", "phone": "0505265026", "lastVisit": "2026-01-15T12:14:40.523+00:00", "daysInactive": 153, "totalTreatments": 3}, {"id": "aac6ce16-66b4-469e-8aa9-afe8b598bc5d", "name": "נועה דליהו", "phone": "0504400761", "lastVisit": "2026-01-15T17:09:46.923+00:00", "daysInactive": 153, "totalTreatments": 12}, {"id": "25506662-ae70-42f1-a535-733aa929114c", "name": "דור חדד", "phone": "0549061212", "lastVisit": "2026-01-16T12:25:48.393+00:00", "daysInactive": 152, "totalTreatments": 3}, {"id": "dd34413b-6cd8-488b-acdd-686c051daeb7", "name": "בני", "phone": "0542113240", "lastVisit": "2026-01-18T15:35:02.747+00:00", "daysInactive": 150, "totalTreatments": 5}, {"id": "eab677a8-fa4b-4960-8ecf-72fda8818fdd", "name": "ליאנה וקסלר", "phone": "0504082514", "lastVisit": "2026-01-18T19:06:14.853+00:00", "daysInactive": 150, "totalTreatments": 1}, {"id": "a25deb97-8397-4698-b0bb-88c2f4f56eb8", "name": "דורון שניר", "phone": "0505758769", "lastVisit": "2026-01-20T19:50:41.74+00:00", "daysInactive": 148, "totalTreatments": 1}, {"id": "211749fd-8200-4099-9067-b47b584a86f4", "name": "אריאל רובין", "phone": "0543215337", "lastVisit": "2026-01-23T08:19:21.063+00:00", "daysInactive": 145, "totalTreatments": 9}, {"id": "037bfbe7-834b-4e0a-92f0-9244f5e3f123", "name": "נועה מזרחי", "phone": "0528545198", "lastVisit": "2026-01-23T14:21:40.723+00:00", "daysInactive": 145, "totalTreatments": 5}, {"id": "73f5dec5-5bcc-4c62-a443-a6604be576fe", "name": "נועם רחני", "phone": "0526384395", "lastVisit": "2026-01-25T17:47:53.963+00:00", "daysInactive": 143, "totalTreatments": 1}, {"id": "38a0a76e-176b-4edb-8ec4-91c9f1390a93", "name": "רוני קידר", "phone": "0542630903", "lastVisit": "2026-01-27T16:41:10.727+00:00", "daysInactive": 141, "totalTreatments": 1}, {"id": "0c80c48f-7d4a-4b7e-a390-d94bb7a981e2", "name": "SORANYI", "phone": "0549026977", "lastVisit": "2026-01-27T15:02:48.49+00:00", "daysInactive": 141, "totalTreatments": 1}, {"id": "bf610f32-9b21-4ac7-9d4f-59bf54e3ef2c", "name": "רינת דחבש", "phone": "0543001089", "lastVisit": "2026-01-27T18:20:29.777+00:00", "daysInactive": 141, "totalTreatments": 5}, {"id": "b7968b44-7635-4a79-9727-c484c641c5dc", "name": "עדן בואזיז", "phone": "0533390977", "lastVisit": "2026-01-30T11:50:44.887+00:00", "daysInactive": 138, "totalTreatments": 2}, {"id": "5f2a4029-92b3-4ef6-befc-c2af560432ed", "name": "שי בר", "phone": "0528270291", "lastVisit": "2026-01-30T11:50:24.527+00:00", "daysInactive": 138, "totalTreatments": 6}, {"id": "43ad5a60-dca1-40be-af7e-bb6c2a566f6b", "name": "מעיין אפרמיאן", "phone": "0533328601", "lastVisit": "2026-01-30T13:00:05.87+00:00", "daysInactive": 138, "totalTreatments": 22}, {"id": "27b183f8-03ee-4a49-ba2d-b88add68fe1f", "name": "אופיר נקאש", "phone": "0503321166", "lastVisit": "2026-01-30T12:59:40.27+00:00", "daysInactive": 138, "totalTreatments": 13}, {"id": "174da67d-f046-4ef6-a68c-ecd085ea8c7f", "name": "mimi", "phone": "0535882388", "lastVisit": "2026-02-03T19:05:26.683+00:00", "daysInactive": 134, "totalTreatments": 5}, {"id": "2401960d-03ed-4eb3-a52f-e3e78c8505c8", "name": "הילה חזמה", "phone": "0542462629", "lastVisit": "2026-02-08T16:29:39.83+00:00", "daysInactive": 129, "totalTreatments": 1}, {"id": "b3e207c5-94a2-4509-9e28-45a11d4d48d9", "name": "יובל רוזן", "phone": "0546226414", "lastVisit": "2026-02-10T19:34:38.003+00:00", "daysInactive": 127, "totalTreatments": 10}, {"id": "28ea5aae-e67b-471b-b5ad-f9819540ece0", "name": "Odeya Moosie", "phone": "0504091237", "lastVisit": "2026-02-10T19:35:02.783+00:00", "daysInactive": 127, "totalTreatments": 1}, {"id": "9ad497ec-6dff-4749-abeb-f644501647ef", "name": "רואי לאון", "phone": "0526969724", "lastVisit": "2026-02-10T19:34:52.497+00:00", "daysInactive": 127, "totalTreatments": 2}, {"id": "ff663faa-ebda-489e-8707-6108ba2c749c", "name": "אילנה", "phone": "0585613691", "lastVisit": "2026-02-10T15:24:37.857+00:00", "daysInactive": 127, "totalTreatments": 3}, {"id": "6b14a89b-21c0-4ebf-a3af-e3cf227e8bc6", "name": "היילי רפאלי", "phone": "0544863567", "lastVisit": "2026-02-11T13:25:00.237+00:00", "daysInactive": 126, "totalTreatments": 1}, {"id": "f3a1622a-5b55-4847-878e-16550906da07", "name": "אלה ביטון", "phone": "0502244257", "lastVisit": "2026-02-13T13:12:56.367+00:00", "daysInactive": 124, "totalTreatments": 1}, {"id": "cb93b826-1e26-4608-abec-318dfbc74d6d", "name": "דוד אסרף", "phone": "0524177117", "lastVisit": "2026-02-15T21:23:31.213+00:00", "daysInactive": 122, "totalTreatments": 1}, {"id": "e5c4186f-898c-4360-b1c8-1cb234cee7f8", "name": "דותן", "phone": "0502688856", "lastVisit": "2026-02-15T14:11:56.673+00:00", "daysInactive": 122, "totalTreatments": 1}, {"id": "365ca16b-afd5-417b-8508-2d0d8a4f4273", "name": "mila tawil", "phone": "0543935500", "lastVisit": "2026-02-15T19:50:44.407+00:00", "daysInactive": 122, "totalTreatments": 8}, {"id": "4880e138-9a7f-4920-8641-e94a9f8cfc7c", "name": "אליה אוחנה", "phone": "0524068883", "lastVisit": "2026-02-15T14:12:07.03+00:00", "daysInactive": 122, "totalTreatments": 6}, {"id": "c6daa007-4023-4ca4-95f5-dd6c517ad094", "name": "איתי לוירון", "phone": "0544782343", "lastVisit": "2026-02-17T10:25:15.44+00:00", "daysInactive": 120, "totalTreatments": 3}, {"id": "dec331e8-9e67-40d5-b188-80032fd8bf7a", "name": "תמר צור", "phone": "0542030221", "lastVisit": "2026-02-20T13:15:22.773+00:00", "daysInactive": 117, "totalTreatments": 10}, {"id": "4a273ad9-5165-4085-816c-a2f62e71e8cf", "name": "מאי מירב", "phone": "0547482124", "lastVisit": "2026-02-22T16:48:46.63+00:00", "daysInactive": 115, "totalTreatments": 14}, {"id": "fa8a644f-dce4-485d-ad5f-1f7b8dde1909", "name": "Thais Gandelman Schtruk", "phone": "0534335344", "lastVisit": "2026-02-24T19:10:38.81+00:00", "daysInactive": 113, "totalTreatments": 1}, {"id": "69350033-eb01-467c-8db6-5d4022da2024", "name": "Danielle Saban", "phone": "0542283083", "lastVisit": "2026-02-24T20:36:28.723+00:00", "daysInactive": 113, "totalTreatments": 1}, {"id": "a6a77de6-c32b-4902-8888-302d61982891", "name": "אולגה צ׳עדייב", "phone": "0587809992", "lastVisit": "2026-02-27T09:52:47.163+00:00", "daysInactive": 110, "totalTreatments": 2}, {"id": "5c68a1f8-078d-4a61-ade6-93990c1a6817", "name": "שיר מיכאלי", "phone": "0533362221", "lastVisit": "2026-03-10T17:44:20.997+00:00", "daysInactive": 99, "totalTreatments": 1}, {"id": "dd23bf37-ca43-4b74-b788-8978b0698c86", "name": "עומר מירכור", "phone": "0545478920", "lastVisit": "2026-03-10T18:02:18.25+00:00", "daysInactive": 99, "totalTreatments": 2}, {"id": "301001d7-a6ee-451a-9e34-e2948362f595", "name": "שנל עגמי", "phone": "0503831629", "lastVisit": "2026-03-15T17:18:07.22+00:00", "daysInactive": 94, "totalTreatments": 3}, {"id": "136ca7ac-1f1e-4b54-bbc8-d7e5af93f64a", "name": "רחלי ברזילי", "phone": "0504332066", "lastVisit": "2026-03-17T19:02:15.76+00:00", "daysInactive": 92, "totalTreatments": 4}, {"id": "2ff26d73-108f-478b-a66d-8fb6cf3d2117", "name": "יוני", "phone": "0526003297", "lastVisit": "2026-03-19T13:50:24.28+00:00", "daysInactive": 90, "totalTreatments": 3}, {"id": "0f1d2991-5e49-493f-976f-3a973685e82b", "name": "ניקול שבצ׳וק", "phone": "0532479223", "lastVisit": "2026-03-20T08:56:46.027+00:00", "daysInactive": 89, "totalTreatments": 1}, {"id": "d2fce908-edcc-472f-ab3c-b8f0ce49c3cd", "name": "זיו צרני", "phone": "0535258135", "lastVisit": "2026-03-20T13:30:46.793+00:00", "daysInactive": 89, "totalTreatments": 18}, {"id": "fd222074-67fd-4fc2-beb1-d7741847e0a0", "name": "אושרי טו", "phone": "0545959100", "lastVisit": "2026-03-20T12:05:04.977+00:00", "daysInactive": 89, "totalTreatments": 19}, {"id": "d76af44f-2aff-486f-bd7c-cba85f2741bc", "name": "יינון", "phone": "0523246616", "lastVisit": "2026-03-26T09:04:00.13+00:00", "daysInactive": 83, "totalTreatments": 4}, {"id": "74fdf026-b97e-4c08-9f15-63e962b93e84", "name": "Paras Rizal", "phone": "0538935112", "lastVisit": "2026-03-27T10:27:16.317+00:00", "daysInactive": 82, "totalTreatments": 3}, {"id": "223d769c-5375-4929-b663-05a82597bdc8", "name": "ליהי טולדנו", "phone": "0535315669", "lastVisit": "2026-03-27T10:27:29.53+00:00", "daysInactive": 82, "totalTreatments": 1}, {"id": "32246461-15ef-40d9-8534-64fa9c1001bb", "name": "דורין יחזקאל", "phone": "0549253938", "lastVisit": "2026-03-27T13:01:30.257+00:00", "daysInactive": 82, "totalTreatments": 3}, {"id": "8288fd68-1ec9-4946-943a-53d2508a4762", "name": "Ella Goldberg", "phone": "0502534843", "lastVisit": "2026-03-27T13:02:04.1+00:00", "daysInactive": 82, "totalTreatments": 2}, {"id": "6d67b14a-5291-42a4-bb28-0bd4b0cc3e5b", "name": "Kira Berman", "phone": "0529574061", "lastVisit": "2026-03-29T19:41:39.697+00:00", "daysInactive": 80, "totalTreatments": 1}, {"id": "185ef8cb-2dc6-4dce-8c08-f268cbf05a88", "name": "נועה חנסב", "phone": "0545745636", "lastVisit": "2026-03-29T19:44:50.207+00:00", "daysInactive": 80, "totalTreatments": 20}, {"id": "5555e238-807a-45dc-abe7-12fe1fcc0229", "name": "גאיה בן מאיר", "phone": "0523722760", "lastVisit": "2026-03-29T13:40:09.137+00:00", "daysInactive": 80, "totalTreatments": 7}, {"id": "b7ac6e20-9f79-498f-823f-0ba79594f85a", "name": "טליה כליף", "phone": "0549200470", "lastVisit": "2026-03-29T15:06:09.273+00:00", "daysInactive": 80, "totalTreatments": 3}, {"id": "0ad4b575-042d-4685-9cde-c8af1083409c", "name": "רוית סולמי", "phone": "0505758030", "lastVisit": "2026-04-01T09:40:15.893+00:00", "daysInactive": 77, "totalTreatments": 1}, {"id": "eb9231ad-6953-4651-9339-4a2b35bcbbd4", "name": "שירי דבי", "phone": "0504599904", "lastVisit": "2026-04-01T10:36:32.107+00:00", "daysInactive": 77, "totalTreatments": 1}, {"id": "4fe46911-10d5-44c8-a209-d6eb3ea45363", "name": "סימה שלי", "phone": "0507121270", "lastVisit": "2026-04-01T11:30:38.98+00:00", "daysInactive": 77, "totalTreatments": 12}, {"id": "db7808cc-5b54-42c6-b452-4db2d5d0961a", "name": "ליר", "phone": "0524448437", "lastVisit": "2026-04-03T11:36:06.06+00:00", "daysInactive": 75, "totalTreatments": 2}, {"id": "07042463-d343-4d4e-a23a-0f5682a79bc5", "name": "גל ג׳קסון", "phone": "0549444343", "lastVisit": "2026-04-05T18:22:29.223+00:00", "daysInactive": 73, "totalTreatments": 2}, {"id": "38500200-4596-4e61-893c-28029d283bc2", "name": "אביב מיכאלי", "phone": "0525244100", "lastVisit": "2026-04-05T15:36:37.343+00:00", "daysInactive": 73, "totalTreatments": 1}, {"id": "e0e3d5a7-c6a9-45b3-affc-03d5412159f2", "name": "אנה שור", "phone": "0526904932", "lastVisit": "2026-04-05T15:38:41.997+00:00", "daysInactive": 73, "totalTreatments": 2}, {"id": "8af69351-07cc-4c03-b665-1f465c2ed105", "name": "עופר יעוז", "phone": "0523059966", "lastVisit": "2026-04-05T15:38:51.98+00:00", "daysInactive": 73, "totalTreatments": 5}, {"id": "767dd2f7-9664-426f-864a-c2155b2cec0a", "name": "אלון ק", "phone": "0528022297", "lastVisit": "2026-04-05T18:21:56.643+00:00", "daysInactive": 73, "totalTreatments": 5}, {"id": "984d7673-9f61-407d-a187-5a5d5ed1f770", "name": "רונה פאר", "phone": "0552254396", "lastVisit": "2026-04-05T15:57:09.937+00:00", "daysInactive": 73, "totalTreatments": 11}, {"id": "52aef360-ec3d-42af-b8e8-76bdcb6b6be2", "name": "Maya m", "phone": "0535554050", "lastVisit": "2026-04-07T14:37:37.067+00:00", "daysInactive": 71, "totalTreatments": 1}, {"id": "7e480784-b064-47a0-95f2-2f6d5e5c3491", "name": "רוני עזרא", "phone": "0542194066", "lastVisit": "2026-04-07T14:37:49.277+00:00", "daysInactive": 71, "totalTreatments": 3}, {"id": "20e30f93-f857-4c49-bf8f-11e9ab77b664", "name": "טל ברק", "phone": "0552419414", "lastVisit": "2026-04-07T10:14:50.617+00:00", "daysInactive": 71, "totalTreatments": 22}, {"id": "0adf66de-d78c-4a73-92f5-b7f13d7c19e0", "name": "מעוז כהן", "phone": "0548717202", "lastVisit": "2026-04-10T13:34:30.207+00:00", "daysInactive": 68, "totalTreatments": 1}, {"id": "b8a4ac0d-d199-4848-a310-3bcb856592fb", "name": "ליזה קליין", "phone": "0585552244", "lastVisit": "2026-04-14T15:54:23.37+00:00", "daysInactive": 64, "totalTreatments": 4}, {"id": "0f4c160d-23eb-4f7c-af11-6ef2ccb705af", "name": "נטע-לי סטרונגין", "phone": "0535295401", "lastVisit": "2026-04-14T19:28:40.533+00:00", "daysInactive": 64, "totalTreatments": 16}, {"id": "a22b4abf-2057-4936-942e-f89669dbb3df", "name": "דניאל ים", "phone": "0542133402", "lastVisit": "2026-04-14T19:23:19.53+00:00", "daysInactive": 64, "totalTreatments": 19}, {"id": "2ab6b523-43ff-41d9-936c-188758567ad2", "name": "נטע מלחי", "phone": "0507603038", "lastVisit": "2026-04-14T20:38:11.047+00:00", "daysInactive": 64, "totalTreatments": 6}, {"id": "a376b7e4-0455-43b4-8cd1-7141250d5753", "name": "צוף אבטבי", "phone": "0542142611", "lastVisit": "2026-04-16T18:36:45.427+00:00", "daysInactive": 62, "totalTreatments": 6}, {"id": "71781374-b368-4047-a800-da91a733c679", "name": "לימור לוז", "phone": "0528624449", "lastVisit": "2026-04-17T12:03:39.833+00:00", "daysInactive": 61, "totalTreatments": 7}, {"id": "5da7c084-3223-4c7f-966d-2846a1c3b28d", "name": "גלעד שחם", "phone": "0526060576", "lastVisit": "2026-04-17T12:57:45.457+00:00", "daysInactive": 61, "totalTreatments": 16}, {"id": "eedf59da-7550-453e-b425-97ee5363c0ac", "name": "אבי מצלאוי", "phone": "0504430400", "lastVisit": "2026-04-17T08:25:52.897+00:00", "daysInactive": 61, "totalTreatments": 14}, {"id": "3b993d12-994a-405d-a451-4779d49b601b", "name": "יובל פלג", "phone": "0524410655", "lastVisit": "2026-04-17T10:03:46.413+00:00", "daysInactive": 61, "totalTreatments": 12}, {"id": "0ca3bf24-cf59-4aed-9459-15efe784efec", "name": "גאיה צור", "phone": "0546878293", "lastVisit": "2026-04-18T17:37:49.497+00:00", "daysInactive": 60, "totalTreatments": 9}, {"id": "81fa1450-2336-4274-bf2d-caefaff5abad", "name": "יובל גור אריה", "phone": "0543381811", "lastVisit": "2026-04-19T12:35:32.43+00:00", "daysInactive": 59, "totalTreatments": 6}, {"id": "48bc624d-436d-4f24-acb8-39db8eeb5ec2", "name": "Ifat Okanin", "phone": "0523732383", "lastVisit": "2026-04-19T17:14:52.213+00:00", "daysInactive": 59, "totalTreatments": 1}, {"id": "3a76e442-93e2-4a55-8ef1-615bd4b1ccd6", "name": "רננה חזי גיספן", "phone": "0524418543", "lastVisit": "2026-04-19T16:52:26.877+00:00", "daysInactive": 59, "totalTreatments": 10}, {"id": "2aa2b4b0-d414-4f9a-b0ef-13c003eb90b5", "name": "נועה חביב", "phone": "0543977970", "lastVisit": "2026-04-19T17:35:24.647+00:00", "daysInactive": 59, "totalTreatments": 8}, {"id": "57d06608-39e5-430c-9e48-e2b1a740764c", "name": "ליאור אביטבול", "phone": "0527361288", "lastVisit": "2026-04-21T13:45:06.337+00:00", "daysInactive": 57, "totalTreatments": 5}, {"id": "cdad2102-6437-4ef1-aea1-b1ed0fa1b73a", "name": "אוריאן כהן", "phone": "0523401420", "lastVisit": "2026-04-21T14:46:08.873+00:00", "daysInactive": 57, "totalTreatments": 5}, {"id": "cf1b9a65-1cda-4406-af39-95908dfe4012", "name": "‫עידן שילוח", "phone": "0509054009", "lastVisit": "2026-04-24T13:17:41.567+00:00", "daysInactive": 54, "totalTreatments": 3}, {"id": "5c262d96-b51e-4ab5-92b1-f422b8976f0f", "name": "נטע אגיוף", "phone": "0503831138", "lastVisit": "2026-04-24T13:17:51.577+00:00", "daysInactive": 54, "totalTreatments": 9}, {"id": "eec4eb26-be66-4902-a666-80f71da2493c", "name": "גלעד בר", "phone": "0543330762", "lastVisit": "2026-04-26T19:07:41.883+00:00", "daysInactive": 52, "totalTreatments": 5}, {"id": "64327d77-378c-4820-8bab-799e0fd41f90", "name": "יהודה קרויזר", "phone": "0505762096", "lastVisit": "2026-04-26T19:08:15.27+00:00", "daysInactive": 52, "totalTreatments": 12}, {"id": "301d392d-aec0-4c86-b1e8-8e00e8a3bd40", "name": "איזבל סגנובסקי", "phone": "0526245096", "lastVisit": "2026-04-28T19:09:15.293+00:00", "daysInactive": 50, "totalTreatments": 1}, {"id": "b8669ff6-0278-41ed-8ea8-0b7e43fe2105", "name": "הילי קופרפיש", "phone": "0547402724", "lastVisit": "2026-04-28T18:09:27.41+00:00", "daysInactive": 50, "totalTreatments": 7}, {"id": "9a524643-e010-4150-a5ef-e1a444f487fd", "name": "שירלי גאבר", "phone": "0542500605", "lastVisit": "2026-04-29T07:02:14.3+00:00", "daysInactive": 50, "totalTreatments": 8}, {"id": "fcf635b5-b4fa-43db-a357-228f7cd89091", "name": "אלה אורנשטיין", "phone": "0523393986", "lastVisit": "2026-04-28T19:49:33.487+00:00", "daysInactive": 50, "totalTreatments": 19}, {"id": "63decb92-175f-4787-b59a-31996dbaf82f", "name": "אילה נאור נתן", "phone": "0548326611", "lastVisit": "2026-04-30T10:13:17.32+00:00", "daysInactive": 48, "totalTreatments": 12}, {"id": "30ba2749-7628-4c0f-9f97-ac5e539f58ca", "name": "ניסים פרץ", "phone": "0542050746", "lastVisit": "2026-05-01T09:48:42.937+00:00", "daysInactive": 47, "totalTreatments": 4}, {"id": "f6a2ee2b-2955-43d0-9415-6b7fbd07ea53", "name": "סימונה לוין", "phone": "0546336723", "lastVisit": "2026-05-01T12:33:59.87+00:00", "daysInactive": 47, "totalTreatments": 2}, {"id": "2e62fca3-dfc4-4ef2-a458-5aed5ad40378", "name": "ירדן ריינר", "phone": "0504442575", "lastVisit": "2026-05-01T10:14:07.493+00:00", "daysInactive": 47, "totalTreatments": 3}, {"id": "d3424029-690a-4545-b747-846b11c2cb9d", "name": "יאיר דניאל", "phone": "0547332000", "lastVisit": "2026-05-01T12:31:21.78+00:00", "daysInactive": 47, "totalTreatments": 2}, {"id": "3e4a49c9-1955-442b-9404-9094a8575f14", "name": "לייה ימיני", "phone": "0542649926", "lastVisit": "2026-05-01T12:33:37.747+00:00", "daysInactive": 47, "totalTreatments": 1}, {"id": "5d195067-f1be-4ac8-a810-65fed997cbbc", "name": "עמית בן דוד", "phone": "0542021617", "lastVisit": "2026-05-01T09:48:31.84+00:00", "daysInactive": 47, "totalTreatments": 2}, {"id": "ab2c7618-6680-4cd8-8850-16722504c74c", "name": "רפי שטיינר", "phone": "0527927504", "lastVisit": "2026-05-03T16:56:27.293+00:00", "daysInactive": 45, "totalTreatments": 1}, {"id": "1d782772-11fb-4ebc-8b6a-5345b239097c", "name": "בתיה לולוי", "phone": "0532091074", "lastVisit": "2026-05-03T13:43:14.107+00:00", "daysInactive": 45, "totalTreatments": 5}, {"id": "2a0b62a4-36d5-4cfe-aae1-ce96e5339fe1", "name": "יערה", "phone": "0504402140", "lastVisit": "2026-05-05T19:05:28.243+00:00", "daysInactive": 43, "totalTreatments": 5}, {"id": "1ae9da81-c048-4e55-bc47-173bdb632148", "name": "עילאי גלאם", "phone": "0523222856", "lastVisit": "2026-05-05T19:04:12.297+00:00", "daysInactive": 43, "totalTreatments": 14}, {"id": "ed1c0e6b-39bf-4fbc-b979-6d83dc74e044", "name": "יוסי יוספן", "phone": "0508269968", "lastVisit": "2026-05-05T19:04:26+00:00", "daysInactive": 43, "totalTreatments": 2}, {"id": "b3eb5b8b-3ec0-4825-bc37-6cfd8a670658", "name": "נעמה קרן", "phone": "0545428228", "lastVisit": "2026-05-05T15:41:24.727+00:00", "daysInactive": 43, "totalTreatments": 9}, {"id": "49580b20-5d48-4fb8-935f-d68dfd7871de", "name": "עינב יהודה", "phone": "0542115902", "lastVisit": "2026-05-06T11:43:13.363+00:00", "daysInactive": 42, "totalTreatments": 32}, {"id": "42ea22d4-4348-4c49-b583-75a5ff5d8710", "name": "רז חמו", "phone": "0526851998", "lastVisit": "2026-05-07T17:44:06.83+00:00", "daysInactive": 41, "totalTreatments": 7}, {"id": "736f6231-6468-4749-b9d2-bfdde7d825b1", "name": "אילאיי אלדורות", "phone": "0535217234", "lastVisit": "2026-05-07T18:00:41.62+00:00", "daysInactive": 41, "totalTreatments": 1}, {"id": "d40a341b-084c-4541-88ff-d14940f38386", "name": "גרייס קרני", "phone": "0544550205", "lastVisit": "2026-05-07T09:09:00.837+00:00", "daysInactive": 41, "totalTreatments": 1}, {"id": "20ee2353-f902-4482-94f9-70776fddc11e", "name": "שגב קלישר", "phone": "0525051447", "lastVisit": "2026-05-07T18:43:52.827+00:00", "daysInactive": 41, "totalTreatments": 2}, {"id": "72b2f3d7-81cb-4de7-a605-a93b40d8cadb", "name": "שחר שאלתיאל", "phone": "0504370570", "lastVisit": "2026-05-07T15:09:40.147+00:00", "daysInactive": 41, "totalTreatments": 2}, {"id": "bd9fbfa0-8491-4119-8ba5-3a515aec5d1f", "name": "תהל אלבז", "phone": "0536072633", "lastVisit": "2026-05-07T15:07:29.853+00:00", "daysInactive": 41, "totalTreatments": 1}, {"id": "4e8d11c9-d608-4757-a0aa-0b688ff39b15", "name": "איתן כהן", "phone": "0547879280", "lastVisit": "2026-05-08T13:18:47.287+00:00", "daysInactive": 40, "totalTreatments": 12}, {"id": "6d70d959-96fb-4aa1-ad6c-def830b3cb7d", "name": "Omry Morag", "phone": "0523763563", "lastVisit": "2026-05-08T13:17:47.267+00:00", "daysInactive": 40, "totalTreatments": 5}, {"id": "7cf9e32e-509e-485d-bef8-3cc43dc9b1c4", "name": "עדי בראל", "phone": "0528679358", "lastVisit": "2026-05-10T19:57:54.477+00:00", "daysInactive": 38, "totalTreatments": 1}, {"id": "e837f76b-2639-4f6c-89d1-8b023f788752", "name": "מוריה מרקוזה", "phone": "0503636484", "lastVisit": "2026-05-10T13:30:31.71+00:00", "daysInactive": 38, "totalTreatments": 3}, {"id": "2e427a70-acf9-4a8f-90b9-f09ad7411e56", "name": "ליאת פל", "phone": "0543133490", "lastVisit": "2026-05-10T18:14:18.543+00:00", "daysInactive": 38, "totalTreatments": 5}, {"id": "c2f0986c-ccc5-4491-a410-6aa1070e44ae", "name": "גבי קצביאן", "phone": "0528305321", "lastVisit": "2026-05-10T09:27:59.293+00:00", "daysInactive": 38, "totalTreatments": 5}, {"id": "7d87f8d6-c6fc-48c7-9a9e-a3b9b3e94c42", "name": "טל מזרחי", "phone": "0526644664", "lastVisit": "2026-05-10T13:30:44.253+00:00", "daysInactive": 38, "totalTreatments": 10}, {"id": "5d459f1e-5e33-463f-9de4-6158b4bd8f62", "name": "עוז בשי", "phone": "0526456877", "lastVisit": "2026-05-11T14:57:35.3+00:00", "daysInactive": 37, "totalTreatments": 3}, {"id": "a78c0c0c-b2c1-4a73-80da-69aee478bf9a", "name": "Sejal pradhan .", "phone": "0549548703", "lastVisit": "2026-05-11T14:57:16.4+00:00", "daysInactive": 37, "totalTreatments": 7}, {"id": "6c083dca-4a36-4531-bacf-068561c69daa", "name": "רומי קסלר", "phone": "0584058460", "lastVisit": "2026-05-12T19:54:55.53+00:00", "daysInactive": 36, "totalTreatments": 4}, {"id": "0d6feeb8-79ac-483a-b122-a75dc9b9e97a", "name": "עמית בר", "phone": "0527983336", "lastVisit": "2026-05-12T20:53:36.713+00:00", "daysInactive": 36, "totalTreatments": 2}, {"id": "9b2900de-cfa0-4efd-b24e-db88923f8387", "name": "ליאם אהרוני", "phone": "0523528232", "lastVisit": "2026-05-12T19:54:39.993+00:00", "daysInactive": 36, "totalTreatments": 1}, {"id": "4f780627-db4b-46c8-b76a-0588312ff80f", "name": "רונן", "phone": "0522592575", "lastVisit": "2026-05-12T13:05:54.34+00:00", "daysInactive": 36, "totalTreatments": 3}, {"id": "f606b027-9a6d-4667-9a5c-b6597c2a592a", "name": "עומר סולומון", "phone": "0507705833", "lastVisit": "2026-05-12T15:19:02.497+00:00", "daysInactive": 36, "totalTreatments": 18}, {"id": "f2671796-6d08-427b-ab93-41e9118b187f", "name": "יוליה זולוטריוב", "phone": "0523029072", "lastVisit": "2026-05-12T19:55:17.337+00:00", "daysInactive": 36, "totalTreatments": 5}, {"id": "5266c18e-7dc9-4319-a38e-c32f829d5e0d", "name": "דמיטרי קוגן", "phone": "0544291202", "lastVisit": "2026-05-12T20:25:51.81+00:00", "daysInactive": 36, "totalTreatments": 1}, {"id": "531a9174-fdcb-4441-be7c-53c79400addb", "name": "תמר רחל כהן", "phone": "0505887905", "lastVisit": "2026-05-12T20:26:03.603+00:00", "daysInactive": 36, "totalTreatments": 8}, {"id": "6b2cd01d-1a06-4795-b2cd-be5ad71b6c3b", "name": "נהוראי דיאמנט", "phone": "0528808192", "lastVisit": "2026-05-14T13:19:27.077+00:00", "daysInactive": 34, "totalTreatments": 1}, {"id": "5f93b805-cdc5-484e-b006-c0af60bcea0d", "name": "דוד רוזן", "phone": "0545420323", "lastVisit": "2026-05-14T15:22:30.32+00:00", "daysInactive": 34, "totalTreatments": 1}, {"id": "59c2a862-deec-4595-9393-cb9107655233", "name": "טל אהרוני", "phone": "0508177999", "lastVisit": "2026-05-14T18:46:18.3+00:00", "daysInactive": 34, "totalTreatments": 1}, {"id": "63e27712-4db5-484d-afc6-379c635c1322", "name": "עדי קרני", "phone": "0534430692", "lastVisit": "2026-05-14T16:16:08.757+00:00", "daysInactive": 34, "totalTreatments": 1}, {"id": "7ac3c5c1-fe24-466f-a536-bf5ec1081e11", "name": "שקד פורמן", "phone": "0558910870", "lastVisit": "2026-05-15T10:42:31.167+00:00", "daysInactive": 33, "totalTreatments": 10}, {"id": "e402164f-77b7-4292-ad11-4e4e18c3b169", "name": "אירינה וינטרמן", "phone": "0587980110", "lastVisit": "2026-05-15T11:47:23.367+00:00", "daysInactive": 33, "totalTreatments": 7}, {"id": "8ee88778-d581-4d6b-bbf8-a427160831bd", "name": "תהילה הרטמן", "phone": "0524201726", "lastVisit": "2026-05-15T14:24:57.48+00:00", "daysInactive": 33, "totalTreatments": 5}, {"id": "60d84076-b810-4bba-b4d8-05b36c3f7d62", "name": "לינוי גבע", "phone": "0542263665", "lastVisit": "2026-05-15T12:55:48.79+00:00", "daysInactive": 33, "totalTreatments": 1}, {"id": "52f333ec-d765-4341-a57b-6e6fc869468b", "name": "עומרי טריקי", "phone": "0502245085", "lastVisit": "2026-05-17T20:14:12.577+00:00", "daysInactive": 31, "totalTreatments": 3}, {"id": "0d0b8075-0e66-4058-a537-61a4ea152f72", "name": "Anju Tamang .", "phone": "0559534828", "lastVisit": "2026-05-17T20:13:05.077+00:00", "daysInactive": 31, "totalTreatments": 3}, {"id": "1cb0a20a-0277-4479-92ac-2d255c8db598", "name": "Ilona Skargovskaya", "phone": "0534762486", "lastVisit": "2026-05-17T20:14:02.133+00:00", "daysInactive": 31, "totalTreatments": 1}, {"id": "1cc8e0bc-52e4-4004-9328-a3308a6d0f5d", "name": "תהילה איזנברג", "phone": "0526246091", "lastVisit": "2026-05-17T20:13:50.24+00:00", "daysInactive": 31, "totalTreatments": 1}];
+
+
 // ─── State ────────────────────────────────────────────
-let allEvents = [];       // all fetched events (parsed)
-let dateMap = {};         // date string → events[]
-let activeDates = [];     // sorted unique dates (DD/MM/YYYY)
+let mode = 'upcoming';
+let allEvents = [];
+let dateMap = {};
+let activeDates = [];
 let selectedDate = '';
 const done = new Set();
+const inactiveDone = new Set();
 
 const DAYS_HE = ['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
-const MONTHS_HE = ['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
 
-// ─── Parse Google Calendar event → our format ─────────
-function parseEvent(ev) {
-  const sum = ev.summary || '';
-  // EasyBiz format: "שם | טיפול N | 0501234567"
-  const parts = sum.split('|').map(s => s.trim());
-  let name = parts[0] || sum;
-  let treatmentNum = 0;
-  let phone = '';
-
-  if (parts.length >= 3) {
-    name = parts[0];
-    const m = parts[1].match(/(\d+)/);
-    if (m) treatmentNum = parseInt(m[1]);
-    phone = parts[2];
-  } else if (parts.length === 2) {
-    name = parts[0];
-    phone = parts[1];
-  }
-
-  // Extract WhatsApp URL from description if present
-  let waUrl = '';
-  const desc = ev.description || '';
-  const waMatch = desc.match(/https:\/\/wa\.me\/\S+/);
-  if (waMatch) waUrl = waMatch[0];
-
-  // Phone fallback from WA url
-  if (!phone && waUrl) {
-    const nm = waUrl.match(/wa\.me\/972(\d+)/);
-    if (nm) phone = '0' + nm[1];
-  }
-
-  const startDT = ev.start?.dateTime || ev.start?.date || '';
-  const endDT   = ev.end?.dateTime   || ev.end?.date   || '';
-
-  const startD = new Date(startDT);
-  const day = String(startD.getDate()).padStart(2,'0');
-  const mon = String(startD.getMonth()+1).padStart(2,'0');
-  const yr  = startD.getFullYear();
-  const dateKey = `${day}/${mon}/${yr}`;
-  const timeStr = startDT.includes('T')
-    ? startD.toLocaleTimeString('he-IL', {hour:'2-digit', minute:'2-digit'})
-    : '';
-  const dayIdx = startD.getDay();
-
-  return {
-    id: ev.id,
-    name: name.trim(),
-    phone: phone.trim(),
-    treatmentNum,
-    waUrl,
-    dateKey,
-    timeStr,
-    dayName: DAYS_HE[dayIdx],
-    startD,
-    sortKey: startD.getTime(),
-    raw: ev,
-  };
+function esc(s) {
+  return (s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
 }
 
-// ─── Main Fetch ────────────────────────────────────────
-async function loadEvents() {
-  const btn = document.getElementById('btnRefresh');
-  const overlay = document.getElementById('loadingOverlay');
-  btn.classList.add('spinning');
-  overlay.classList.add('show');
-
-  // Fetch 14 days from today
-  const now = new Date();
-  const start = now.toISOString().split('T')[0] + 'T00:00:00';
-  const endD = new Date(now.getTime() + 14 * 86400000);
-  const end = endD.toISOString().split('T')[0] + 'T23:59:59';
-
-  try {
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 1000,
-        system: 'You are a Google Calendar assistant for CABELO clinic. When asked to list appointments, call the Google Calendar list_events tool for calendar amit4510@gmail.com and return ONLY a JSON array of the raw events (no explanation). The JSON must be valid and parseable.',
-        messages: [{
-          role: 'user',
-          content: `List all calendar events from amit4510@gmail.com between ${start} and ${end} (timezone Asia/Jerusalem). Order by startTime. Return only a JSON array of event objects with fields: id, summary, description, start, end, status. Skip events where summary is just "." or empty. Max 200 events.`
-        }],
-        mcp_servers: [{
-          type: 'url',
-          url: 'https://calendarmcp.googleapis.com/mcp/v1',
-          name: 'google-calendar'
-        }]
-      })
-    });
-
-    const data = await resp.json();
-
-    // Extract text from content blocks
-    let rawText = '';
-    for (const block of (data.content || [])) {
-      if (block.type === 'text') rawText += block.text;
-      if (block.type === 'mcp_tool_result') {
-        for (const inner of (block.content || [])) {
-          if (inner.type === 'text') rawText += inner.text;
-        }
-      }
-    }
-
-    // Parse JSON array from response
-    let events = [];
-    const jsonMatch = rawText.match(/\[[\s\S]*\]/);
-    if (jsonMatch) {
-      try { events = JSON.parse(jsonMatch[0]); } catch(e) {}
-    }
-
-    // Filter real EasyBiz appointments (summary contains | or has wa.me in description)
-    events = events.filter(ev => {
-      const sum = (ev.summary || '').trim();
-      const desc = ev.description || '';
-      return sum !== '.' && sum !== '' && (sum.includes('|') || desc.includes('wa.me'));
-    });
-
-    processEvents(events);
-
-  } catch(err) {
-    console.error(err);
-    document.getElementById('cardsGrid').innerHTML =
-      `<div class="empty"><div class="icon">⚠️</div>שגיאה בטעינת הנתונים<br><small style="color:#555">${err.message}</small></div>`;
-  } finally {
-    btn.classList.remove('spinning');
-    overlay.classList.remove('show');
-    document.getElementById('lastUpdated').textContent =
-      'עודכן: ' + new Date().toLocaleTimeString('he-IL', {hour:'2-digit',minute:'2-digit'});
-  }
+// ─── Mode switching ───────────────────────────────────
+function switchMode(m) {
+  mode = m;
+  document.getElementById('tabUpcoming').classList.toggle('active', m === 'upcoming');
+  document.getElementById('tabInactive').classList.toggle('active', m === 'inactive');
+  document.getElementById('sectionUpcoming').style.display = m === 'upcoming' ? '' : 'none';
+  document.getElementById('sectionInactive').style.display = m === 'inactive' ? '' : 'none';
+  if (m === 'inactive') renderInactive();
 }
 
-function processEvents(rawEvents) {
-  allEvents = rawEvents.map(parseEvent).sort((a,b) => a.sortKey - b.sortKey);
+// ─── Upcoming: load from embedded static data ─────────
+function todayKey() {
+  const d = new Date();
+  return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
+}
 
-  // Build date map
+function loadUpcoming() {
+  allEvents = UPCOMING_DATA.map(ev => {
+    const startD = new Date(ev.startsAt);
+    const day = String(startD.getDate()).padStart(2,'0');
+    const mon = String(startD.getMonth()+1).padStart(2,'0');
+    const yr = startD.getFullYear();
+    const dateKey = `${day}/${mon}/${yr}`;
+    const timeStr = startD.toLocaleTimeString('he-IL', {hour:'2-digit', minute:'2-digit', timeZone:'Asia/Jerusalem'});
+    return {
+      id: ev.id,
+      name: ev.name,
+      phone: ev.phone,
+      service: ev.service,
+      dateKey,
+      timeStr,
+      dayName: DAYS_HE[startD.getDay()],
+      sortKey: startD.getTime(),
+    };
+  }).sort((a,b) => a.sortKey - b.sortKey);
+
   dateMap = {};
   for (const ev of allEvents) {
     if (!dateMap[ev.dateKey]) dateMap[ev.dateKey] = [];
     dateMap[ev.dateKey].push(ev);
   }
-
   activeDates = Object.keys(dateMap).sort((a,b) => {
     const [da,ma,ya] = a.split('/');
     const [db,mb,yb] = b.split('/');
@@ -654,42 +651,27 @@ function processEvents(rawEvents) {
   });
 
   buildDateTabs();
-
-  // Default: select today if exists, else first date
   const today = todayKey();
   selectedDate = activeDates.includes(today) ? today : (activeDates[0] || '');
   updateActiveTab();
   renderStats();
   renderCards();
+  document.getElementById('lastUpdated').textContent = GENERATED_AT;
 }
 
-function todayKey() {
-  const d = new Date();
-  return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
-}
-
-// ─── Date Tabs ─────────────────────────────────────────
 function buildDateTabs() {
   const nav = document.getElementById('dateNav');
-  // Keep the date picker
   const picker = nav.querySelector('.date-picker-wrap');
   nav.innerHTML = '';
   nav.appendChild(picker);
-
   for (const dk of activeDates) {
     const [d,m,y] = dk.split('/');
     const dt = new Date(y, m-1, d);
     const dayName = DAYS_HE[dt.getDay()];
-    const count = (dateMap[dk] || []).length;
-
     const tab = document.createElement('div');
     tab.className = 'date-tab has-events';
     tab.dataset.date = dk;
-    tab.innerHTML = `
-      <span class="day-name">${dayName}</span>
-      <span>${d}/${m}</span>
-      <div class="count-dot"></div>
-    `;
+    tab.innerHTML = `<span class="day-name">${dayName}</span><span>${d}/${m}</span><div class="count-dot"></div>`;
     tab.onclick = () => selectDate(dk);
     nav.insertBefore(tab, picker);
   }
@@ -706,7 +688,6 @@ function updateActiveTab() {
   document.querySelectorAll('.date-tab').forEach(t => {
     t.classList.toggle('active', t.dataset.date === selectedDate);
   });
-  // Set custom date input
   if (selectedDate) {
     const [d,m,y] = selectedDate.split('/');
     document.getElementById('customDate').value = `${y}-${m}-${d}`;
@@ -726,7 +707,6 @@ function onCustomDate(val) {
   }
 }
 
-// ─── Stats ─────────────────────────────────────────────
 function renderStats() {
   const bar = document.getElementById('statsBar');
   const dayEvents = dateMap[selectedDate] || [];
@@ -735,82 +715,116 @@ function renderStats() {
   const [d,m,y] = (selectedDate || todayKey()).split('/');
   const dt = new Date(y,m-1,d);
   const dayName = DAYS_HE[dt.getDay()];
-
   bar.style.display = 'flex';
   bar.innerHTML = `
     <div class="stat">📅 <strong>${dayName} ${d}/${m}</strong></div>
     <div class="stat">👥 <strong>${dayEvents.length}</strong> תורים ביום זה</div>
     <div class="stat">📆 <strong>${todayCount}</strong> תורים היום</div>
-    <div class="stat">🗓️ <strong>${total}</strong> תורים ב-14 הימים הקרובים</div>
+    <div class="stat">🗓️ <strong>${total}</strong> תורים בחלון שנשלף</div>
   `;
 }
 
-// ─── Cards ─────────────────────────────────────────────
+function buildWAUrl(phone) {
+  if (!phone) return '';
+  const digits = phone.replace(/\D/g,'');
+  const intl = digits.startsWith('972') ? digits : `972${digits.replace(/^0/,'')}`;
+  return `https://wa.me/${intl}`;
+}
+
+function buildWAMessage(ev) {
+  return `שלום ${ev.name} 😊\n\nרצינו להזכיר לך שיש לך תור ב-CABELO\nתאריך: ${ev.dateKey}\nשעה: ${ev.timeStr}\nטיפול: ${ev.service}\n\nנשמח לראות אותך! 🌟\n– צוות CABELO`;
+}
+
 function renderCards() {
   const search = document.getElementById('searchInput').value.trim().toLowerCase();
   let events = dateMap[selectedDate] || [];
-
   if (search) {
-    events = events.filter(e =>
-      e.name.toLowerCase().includes(search) || e.phone.includes(search)
-    );
+    events = events.filter(e => e.name.toLowerCase().includes(search) || e.phone.includes(search));
   }
-
   const grid = document.getElementById('cardsGrid');
-
   if (events.length === 0) {
     grid.innerHTML = `<div class="empty"><div class="icon">📭</div>${search ? 'לא נמצאו תוצאות' : 'אין תורים ביום זה'}</div>`;
     return;
   }
-
   grid.innerHTML = events.map((ev, i) => {
     const isDone = done.has(ev.id);
-    const isFirst = ev.treatmentNum === 0 || ev.treatmentNum === 1;
-    const msg = buildWAMessage(ev);
-    const waHref = ev.waUrl
-      ? `${ev.waUrl}?text=${encodeURIComponent(msg)}`
-      : (ev.phone ? `https://wa.me/972${ev.phone.replace(/^0/,'')}?text=${encodeURIComponent(msg)}` : '');
-
+    const waUrl = buildWAUrl(ev.phone);
     return `<div class="card${isDone?' done':''}" style="animation-delay:${i*0.04}s" id="card-${ev.id}">
       <div class="card-time">${ev.timeStr}</div>
-      <div class="card-name">
-        ${ev.name}
-        ${isFirst ? '<span class="badge first">לקוח חדש</span>' : `<span class="badge">טיפול ${ev.treatmentNum}</span>`}
-      </div>
+      <div class="card-name">${ev.name} <span class="badge">${ev.service}</span></div>
       <div class="card-phone">${ev.phone || '—'}</div>
       <div class="card-actions">
-        ${waHref
-          ? `<button class="btn-wa" onclick="openModal('${esc(ev.id)}','${esc(ev.name)}','${esc(ev.phone)}','${esc(ev.waUrl)}','${esc(ev.timeStr)}','${esc(ev.dateKey)}',${ev.treatmentNum})">📱 שלח תזכורת</button>`
-          : `<button class="btn-wa" style="opacity:.4;cursor:default">אין טלפון</button>`
-        }
+        ${waUrl
+          ? `<button class="btn-wa" onclick="openModal('${esc(ev.id)}','${esc(ev.name)}','${esc(ev.phone)}','${esc(waUrl)}','${esc(ev.timeStr)}','${esc(ev.dateKey)}','${esc(ev.service)}')">📱 שלח תזכורת</button>`
+          : `<button class="btn-wa" style="opacity:.4;cursor:default">אין טלפון</button>`}
         <button class="btn-check" onclick="markDone('${ev.id}',this)" title="סמן כנשלח">✓</button>
       </div>
     </div>`;
   }).join('');
 }
 
-function esc(s) {
-  return (s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-}
-
-function buildWAMessage(ev) {
-  return `שלום ${ev.name} 😊\n\nרצינו להזכיר לך שיש לך תור ב-CABELO\nתאריך: ${ev.dateKey}\nשעה: ${ev.timeStr}\n\nנשמח לראות אותך! 🌟\n– צוות CABELO`;
-}
-
 function markDone(id, btn) {
   done.add(id);
-  const card = btn.closest('.card');
-  card.classList.add('done');
+  btn.closest('.card').classList.add('done');
 }
 
-// ─── Modal ─────────────────────────────────────────────
+// ─── Inactive customers ────────────────────────────────
+function buildInactiveMessage(name) {
+  return `הי ${name}, הקיץ כבר כאן וזה הזמן לתאם טיפול המשך 🌞\nמצ"ב קישור לתיאום תור: https://laser-style.queuely.co.il\nצוות CABELO`;
+}
+
+function daysBadgeClass(days) {
+  return days >= 90 ? 'urgent' : 'warm';
+}
+
+function formatDateHe(iso) {
+  const d = new Date(iso);
+  return d.toLocaleDateString('he-IL', {timeZone:'Asia/Jerusalem', day:'2-digit', month:'2-digit', year:'numeric'});
+}
+
+function renderInactive() {
+  const search = document.getElementById('inactiveSearch').value.trim().toLowerCase();
+  let rows = INACTIVE_DATA;
+  if (search) {
+    rows = rows.filter(c => c.name.toLowerCase().includes(search) || c.phone.includes(search));
+  }
+  const body = document.getElementById('inactiveBody');
+  if (rows.length === 0) {
+    body.innerHTML = `<tr><td colspan="5" class="empty">לא נמצאו תוצאות</td></tr>`;
+    return;
+  }
+  body.innerHTML = rows.map(c => {
+    const isDone = inactiveDone.has(c.id);
+    const waUrl = buildWAUrl(c.phone);
+    const msg = buildInactiveMessage(c.name);
+    const href = waUrl ? `${waUrl}?text=${encodeURIComponent(msg)}` : '';
+    return `<tr class="${isDone?'done':''}" id="inactive-${c.id}">
+      <td>${c.name}</td>
+      <td class="phone-col">${c.phone || '—'}</td>
+      <td><span class="days-badge ${daysBadgeClass(c.daysInactive)}">${c.daysInactive} ימים</span> ${formatDateHe(c.lastVisit)}</td>
+      <td>${c.totalTreatments}</td>
+      <td>
+        ${href ? `<a href="${href}" target="_blank" class="btn-wa-small">📱 שלח</a>` : '<span style="opacity:.4">אין טלפון</span>'}
+        <button class="btn-check-small" onclick="markInactiveDone('${c.id}')" title="סמן כנשלח">✓</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function markInactiveDone(id) {
+  inactiveDone.add(id);
+  const row = document.getElementById('inactive-' + id);
+  if (row) row.classList.add('done');
+}
+
+// ─── Modal (shared) ────────────────────────────────────
 let _modalWaBase = '';
-function openModal(id, name, phone, waUrl, time, dateKey, treatNum) {
-  const msg = `שלום ${name} 😊\n\nרצינו להזכיר לך שיש לך תור ב-CABELO\nתאריך: ${dateKey}\nשעה: ${time}\n\nנשמח לראות אותך! 🌟\n– צוות CABELO`;
+function openModal(id, name, phone, waUrl, time, dateKey, service) {
+  const msg = `שלום ${name} 😊\n\nרצינו להזכיר לך שיש לך תור ב-CABELO\nתאריך: ${dateKey}\nשעה: ${time}\nטיפול: ${service}\n\nנשמח לראות אותך! 🌟\n– צוות CABELO`;
   document.getElementById('modalTitle').textContent = `תזכורת ל-${name}`;
   document.getElementById('modalSub').textContent = `${dateKey}  ·  ${time}  ·  ${phone}`;
   document.getElementById('modalMsg').value = msg;
-  _modalWaBase = waUrl || (phone ? `https://wa.me/972${phone.replace(/^0/,'')}` : '');
+  _modalWaBase = waUrl || '';
   updateModalLink();
   document.getElementById('modal').classList.add('open');
 }
@@ -829,10 +843,7 @@ document.getElementById('modal').addEventListener('click', e => {
 });
 
 // ─── Init ──────────────────────────────────────────────
-loadEvents();
-
-// Auto-refresh every 5 minutes
-setInterval(loadEvents, 5 * 60 * 1000);
+loadUpcoming();
 </script>
 </body>
 </html>
